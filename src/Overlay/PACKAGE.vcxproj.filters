@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\AMD\ai_aim\CMakeFiles\316684e662761c96423d11056d565d5c\PACKAGE_force.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{DC1A684E-9B1D-3CC5-ACA2-D2BD4B7E7E24}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
