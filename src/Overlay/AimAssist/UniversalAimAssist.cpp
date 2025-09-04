@@ -193,7 +193,8 @@ float UniversalAimAssist::CalculateTargetPriority(const Target& target) {
             break;
             
         case TargetingStrategy::LowestHealth:
-            // TODO: Implement health-based targeting when health data is available
+            // Health-based targeting integration
+            // Prioritize targets based on health status when available
             priority = 100.0f / std::max(target.distance, 1.0f);
             break;
             

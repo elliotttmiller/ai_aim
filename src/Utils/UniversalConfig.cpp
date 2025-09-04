@@ -135,8 +135,7 @@ void UniversalConfig::DiscoverTargetProcesses() {
     // Add common game process patterns if no specific games found
     if (m_discoveredTargets.empty()) {
         m_discoveredTargets = {
-            L"AimTrainer.exe",  // Our test application
-            L"*.exe"            // Wildcard for any game
+            L"*.exe"            // Universal wildcard for any Windows executable
         };
         Logger::Get().Log("UniversalConfig", "No games detected, using fallback targets");
     }
@@ -373,7 +372,7 @@ std::wstring UniversalConfig::GetTargetProcessName() const {
     if (!m_discoveredTargets.empty()) {
         return m_discoveredTargets[0];
     }
-    return L"AimTrainer.exe"; // Fallback
+    return L"UniversalTarget.exe"; // Dynamic fallback
 }
 
 std::vector<std::wstring> UniversalConfig::GetPossibleTargetProcesses() const {

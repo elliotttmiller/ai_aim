@@ -66,7 +66,7 @@ std::vector<GameInfo> UniversalGameDetector::DetectAllGames() {
     // For cross-platform development, simulate detection
     Logger::Get().Log("GameDetector", "Cross-platform simulation mode");
     GameInfo simulatedGame;
-    simulatedGame.processName = L"TestGame.exe";
+    simulatedGame.processName = L"SimulatedTestTarget.exe";
     simulatedGame.processId = 1234;
     simulatedGame.engine = GameEngine::Unknown;
     simulatedGame.genre = GameGenre::FPS;
@@ -97,8 +97,8 @@ GameInfo UniversalGameDetector::DetectSpecificGame(DWORD processId) {
     }
 #else
     // Cross-platform simulation
-    gameInfo.processName = L"SimulatedGame.exe";
-    gameInfo.executablePath = L"/path/to/SimulatedGame.exe";
+    gameInfo.processName = L"CrossPlatformSimulation.exe";
+    gameInfo.executablePath = std::filesystem::current_path().wstring() + L"/simulation";
 #endif
     
     if (gameInfo.processName.empty()) {
@@ -437,7 +437,7 @@ namespace PathUtils {
         GetModuleFileNameW(NULL, path, MAX_PATH);
         return std::filesystem::path(path).parent_path().wstring();
 #else
-        return L"/home/runner/work/ai_aim/ai_aim";
+        return std::filesystem::current_path().wstring();
 #endif
     }
     
