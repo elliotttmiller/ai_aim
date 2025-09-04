@@ -18,12 +18,11 @@
     #define VK_END 0x23
     void FreeLibraryAndExitThread(HMODULE, DWORD) {}
     HMODULE CreateThread(void*, std::size_t, ThreadStartRoutine, HMODULE, DWORD, void*) { return nullptr; }
-    bool GetAsyncKeyState(int) { return false; }
 #endif
 #include "../Utils/Logger.h"
 #include "../Utils/UniversalConfig.h"
 #include "../Utils/UniversalMemoryScanner.h"
-#include "../Overlay/AimAssist/UniversalAimAssist.h"
+#include "../Utils/UnifiedAimAssist.h"
 #include "../IPC/SharedStructs.h"
 #include <thread>
 #include <chrono>
@@ -57,7 +56,7 @@ DWORD WINAPI MainThread(HMODULE hModule) {
         }
 
         // Initialize universal aim assist system
-        auto& aimAssist = UniversalAimAssist::GetInstance();
+        auto& aimAssist = UnifiedAimAssist::GetInstance();
         if (!aimAssist.Initialize()) {
             Logger::Get().Log("InjectedDLL", "ERROR: Failed to initialize aim assist system");
             FreeLibraryAndExitThread(hModule, 1);

@@ -1,11 +1,13 @@
 #include "UniversalConfig.h"
 #include "GameDetection.h"
 #include "Logger.h"
-#include "StringConvert.h"
+#include "UnifiedUtilities.h"
 #include <filesystem>
 #include <fstream>
 #include <mutex>
 #include <cstring>
+
+using namespace UnifiedUtilities;
 
 #ifdef _WIN32
     #include <Windows.h>

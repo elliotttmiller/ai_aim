@@ -1,11 +1,13 @@
 #include "GameDetection.h"
 #include "Logger.h"
-#include "StringConvert.h"
+#include "UnifiedUtilities.h"
 #include <filesystem>
 #include <algorithm>
 #include <regex>
 #include <chrono>
 #include <thread>
+
+using namespace UnifiedUtilities;
 
 #ifdef _WIN32
     #include <psapi.h>

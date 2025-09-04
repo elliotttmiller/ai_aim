@@ -23,11 +23,12 @@
 #include <chrono>
 
 #include "../Utils/Logger.h"
-#include "../Utils/StringConvert.h"
+#include "../Utils/UnifiedUtilities.h"
 #include "../Utils/GameDetection.h"
 #include "../Utils/UniversalConfig.h"
-#include "../Utils/StringConvert.h"
 #include "../IPC/SharedStructs.h"
+
+using namespace UnifiedUtilities;
 
 class UniversalLauncher {
 public:

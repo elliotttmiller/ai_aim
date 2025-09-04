@@ -27,9 +27,11 @@
 #include "../Utils/Logger.h"
 #include "../Utils/GameDetection.h"
 #include "../Utils/UniversalConfig.h"
-#include "../Utils/StringConvert.h"
-#include "../Overlay/IPC/SharedMemory.h"
+#include "../Utils/UnifiedUtilities.h"
+#include "../IPC/SharedMemory.h"
 #include "../IPC/SharedStructs.h"
+
+using namespace UnifiedUtilities;
 
 class UniversalInjector {
 public:
