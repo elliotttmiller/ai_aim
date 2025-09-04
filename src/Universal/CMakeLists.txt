@@ -1,6 +1,8 @@
 # src/Universal/CMakeLists.txt
 add_library(Universal STATIC
     GameDetection.cpp
+    MemoryScanner.cpp
+    InjectionManager.cpp
     MemoryScanner.h
     GraphicsDetection.h
     InjectionManager.h

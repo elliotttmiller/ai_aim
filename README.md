@@ -1,107 +1,111 @@
-# ai_aim: Universal Autonomous Game Overlay & Integration System
+# ai_aim: Universal Autonomous Game Integration System
 
-**Version:** 1.1.0 (December 2024)
+**Version:** 2.0.0 (September 2024) - **UNIVERSAL EDITION**
 
-## Overview
+## 🎯 Overview
 
-**ai_aim** is a robust, modular, and extensible system for autonomous overlay, aim assist, and real-time data integration with any Windows game. The architecture is designed for universal use—supporting injection, overlay, and configuration for any game, not just the included Aim Trainer. The workflow is **fully autonomous with zero hardcoding**, requiring no manual code changes to the target game, and is adaptable for a wide range of use cases (aim assist, overlays, analytics, etc.).
+**ai_aim** is now a **professional, enterprise-grade universal autonomous game integration system** that works with **ANY Windows game** without modification. The system provides autonomous overlay, aim assist, and real-time data integration through advanced DLL injection, multi-graphics API support, and intelligent game detection.
+
+**✨ Key Features:**
+- **🌍 Universal Game Support**: Works with ANY Windows game (FPS, strategy, MMO, racing, etc.)
+- **🤖 Full Autonomy**: Zero hardcoded values, zero manual configuration
+- **🎮 Multi-Engine Support**: Unity, Unreal, Source, CryEngine, id Tech, custom engines  
+- **🎨 Multi-Graphics API**: DirectX 9/11/12, OpenGL, Vulkan automatic detection
+- **🛡️ Anti-Cheat Evasion**: Multiple injection methods with stealth capabilities
+- **🎯 Adaptive Aim System**: Intelligent aim assist that adapts to any game type
+- **⚡ Real-Time Performance**: Optimized for minimal system impact
 
 ---
 
-## System Architecture
+## 🏗️ Universal System Architecture
 
 ```
-ai_aim/
-├── bin/                # Compiled binaries and debug logs
-│   ├── Debug/          # Debug build outputs
-│   ├── debug.log       # Unified debug log for all modules
-│   └── ...             # All .exe, .dll, .pdb, .lib files
-├── config/             # Configuration files
-│   └── game_memory.cfg # Memory layout/config for overlay/IPC
-├── libs/               # External dependencies (submodules)
-│   ├── dear-imgui/     # ImGui GUI library
-│  │   ├── minhook/        # MinHook for function hooking
-│   └── raylib/         # Raylib graphics library
-├── src/                # All source code
-│   ├── AimTrainer/     # Standalone FPS aim trainer (test app)
-│   │   ├── main.cpp    # Main game logic and entry point
+ai_aim_universal/
+├── bin/                     # Compiled binaries and debug logs
+│   ├── Debug/              # Debug build outputs  
+│   ├── debug.log           # Unified debug log for all modules
+│   └── ...                 # All .exe, .dll, .pdb, .lib files
+├── libs/                   # External dependencies (submodules)
+│   ├── dear-imgui/         # Universal ImGui GUI library
+│   ├── minhook/            # MinHook for function hooking
+│   └── raylib/             # Raylib graphics library (for test app)
+├── src/                    # All source code
+│   ├── Universal/          # 🌟 NEW: Universal game integration core
+│   │   ├── GameDetection.cpp/.h        # Autonomous game detection
+│   │   ├── MemoryScanner.cpp/.h        # Universal memory pattern scanning
+│   │   ├── GraphicsDetection.h         # Multi-API graphics detection
+│   │   ├── InjectionManager.cpp/.h     # Advanced injection methods
+│   │   ├── AimSystem.h                 # Universal aim assist system
 │   │   └── CMakeLists.txt
-│   ├── InjectedDLL/    # Legacy DLL for testing injection
-│   │   ├── dllmain.cpp # Simple DLL entry point
+│   ├── AimTrainer/         # Test application (one of many supported games)
+│   │   ├── main.cpp        # Test game for validation
 │   │   └── CMakeLists.txt
-│   ├── Injector/       # DLL injector for overlay
-│   │   ├── main.cpp    # Injector logic and IPC setup
+│   ├── Injector/           # Universal injector for any game
+│   │   ├── main.cpp        # Multi-method injection with auto-detection
 │   │   └── CMakeLists.txt
-│   ├── IPC/            # Shared IPC code (shared memory only)
-│   │   ├── SharedMemory.cpp/.h    # Shared memory IPC implementation
-│   │   ├── SharedStructs.h        # IPC data structures
+│   ├── Overlay/            # Universal overlay DLL (works with any game)
+│   │   ├── Core/           # Universal DLL entry and main loop
+│   │   │   ├── DllMain.cpp # DLL entry point with universal initialization
+│   │   │   ├── Main.cpp/.h # Universal overlay main loop and rendering
+│   │   ├── AimAssist/      # Universal aim assist logic
+│   │   ├── Input/          # Universal input management
+│   │   ├── IPC/            # Universal IPC communication
+│   │   ├── Memory/         # Universal game memory scanning
+│   │   ├── Renderer/       # Universal overlay rendering
+│   │   ├── UI/             # Universal overlay UI
 │   │   └── CMakeLists.txt
-│   ├── Launcher/       # Orchestrates workflow, launches and injects
-│   │   ├── Launcher.cpp# Main launcher logic
-│   │   └── CMakeLists.txt
-│   ├── Overlay/        # Main overlay DLL (aim assist, UI, hooks)
-│   │   ├── Core/       # DLL entry, main loop
-│   │   │   ├── DllMain.cpp    # DLL entry point, error handling, logging
-│   │   │   ├── Main.cpp/.h    # Overlay main loop, ImGui, hooks
-│   │   ├── AimAssist/  # Aim assist logic
-│   │   │   ├── AimAssist.cpp/.h # Target detection, aim logic
-│   │   ├── Input/      # Input management
-│   │   │   ├── InputManager.cpp/.h # Keyboard/mouse input
-│   │   ├── IPC/        # Overlay-side IPC
-│   │   │   ├── SharedMemory.cpp/.h # Shared memory communication
-│   │   ├── Memory/     # Game memory scanning
-│   │   │   ├── GameData.h     # Game data structures and scanning
-│   │   ├── Renderer/   # Overlay rendering
-│   │   │   ├── Renderer.cpp/.h    # Custom rendering logic
-│   │   ├── UI/         # Overlay UI (ImGui menus)
-│   │   │   ├── Menu.cpp/.h        # Menu and UI logic
-│   │   ├── Utils/      # Utility code
-│   │   │   ├── Singleton.h        # Singleton pattern helper
-│   │   └── CMakeLists.txt
-│   └── Utils/          # Shared utility code
-│       ├── Logger.cpp/.h      # Unified logging system
-│       ├── Singleton.h        # Singleton pattern helper
-│       ├── StringConvert.h    # String conversion utilities
-│       └── CMakeLists.txt
-├── x64/                # Visual Studio build artifacts
-├── .gitignore          # Excludes build, IDE, and log files
-├── .gitmodules         # Git submodule configuration
-├── CMakeLists.txt      # Top-level CMake build configuration
-└── README.md           # Project documentation (this file)
+│   ├── Launcher/           # Universal orchestration system
+│   ├── IPC/                # Universal IPC implementation
+│   └── Utils/              # Shared utility code
+├── CMakeLists.txt          # Universal build configuration
+└── README.md               # This file
 ```
 
 ---
 
-## Universal Autonomous Workflow & Integration
+## 🚀 Universal Autonomous Workflow
 
-### 1. Launcher (`Launcher.exe`) - Fully Autonomous Orchestration
-- Orchestrates the entire workflow for any target game with zero manual configuration.
-- Automatically detects game executables, launches processes, and manages injection lifecycle.
-- Dynamically configures all system parameters without hardcoded values or fallback logic.
-- All actions are logged to `bin/debug.log`.
+### 1. Universal Game Detection (`UniversalGameDetection`)
+- **Autonomous Discovery**: Automatically scans ALL running processes
+- **Game Engine Recognition**: Detects Unity, Unreal, Source, CryEngine, id Tech, custom engines
+- **Graphics API Detection**: Identifies DirectX 9/11/12, OpenGL, Vulkan automatically  
+- **Genre Classification**: Automatically categorizes FPS, strategy, MMO, racing, etc.
+- **Confidence Scoring**: Ranks detected games by compatibility confidence
+- **Zero Hardcoding**: No game-specific process names or signatures
 
-### 2. Injector (`Injector.exe`) - Autonomous Injection & IPC Setup
-- Automatically finds target game processes and selects optimal injection method.
-- Dynamically injects overlay DLL with adaptive method selection (no hardcoded preferences).
-- Autonomously establishes shared memory IPC channels with dynamic configuration.
-- Logs all injection and IPC setup events to `bin/debug.log`.
+### 2. Universal Injection (`UniversalInjectionManager`)
+- **Multi-Method Support**: Manual DLL, SetWindowsHook, Process Hollowing, Manual Mapping, etc.
+- **Anti-Cheat Detection**: Identifies BattlEye, EAC, VAC, Vanguard, and others
+- **Intelligent Selection**: Automatically chooses optimal injection method
+- **Stealth Mode**: Randomization, delays, and evasion techniques
+- **Autonomous Adaptation**: Adapts injection strategy based on target analysis
 
-### 3. Overlay DLL (`Overlay.dll`) - Autonomous Overlay & Aim Assist
-- Injected into any game process, autonomously initializes without manual configuration.
-- Automatically detects graphics API, sets up ImGui, and configures rendering pipeline.
-- Autonomous memory scanning, target detection, and aim assist logic with zero hardcoding.
-- Self-configuring IPC communication and real-time data processing.
-- All overlay actions, errors, and events are logged to `bin/debug.log`.
+### 3. Universal Graphics Integration (`UniversalGraphicsDetection`)
+- **Multi-API Hooks**: Supports DirectX 9/11/12, OpenGL, Vulkan
+- **Automatic Detection**: Identifies graphics API used by target game
+- **Universal ImGui**: Seamless ImGui integration across all graphics APIs
+- **Dynamic Initialization**: Adapts rendering pipeline automatically
+- **Performance Optimized**: Minimal impact on game performance
 
-### 4. Unified Debug Logging
-- All modules write their debug output to `bin/debug.log` for easy troubleshooting and diagnostics.
-- Centralized logging system via Utils/Logger for consistent formatting and thread safety.
+### 4. Universal Memory Scanning (`UniversalMemoryScanner`)
+- **Pattern-Based Detection**: Universal memory patterns across game engines
+- **Dynamic Learning**: Adapts patterns based on detected game engine
+- **Real-Time Scanning**: High-performance memory scanning with caching
+- **Data Validation**: Intelligent validation of detected memory structures
+- **Cross-Engine Support**: Works with any game engine architecture
 
-### 5. Autonomous Configuration & Extensibility
-- System autonomously configures all parameters through dynamic detection and adaptation.
-- Self-discovering memory layouts, graphics APIs, and game-specific data structures.
-- Modular architecture allows autonomous integration of new components without manual configuration.
-- Zero reliance on static configuration files - all settings determined at runtime through intelligent detection.
+### 5. Universal Aim System (`UniversalAimSystem`)
+- **Adaptive Algorithms**: Automatically adapts to FPS, TPS, RTS, MOBA games
+- **Multi-Mode Support**: Silent aim, smooth aim, predictive aim, humanized aim
+- **Game-Aware Targeting**: Adapts targeting based on detected game genre
+- **Advanced Smoothing**: Multiple smoothing algorithms with humanization
+- **Anti-Detection**: Human-like movement patterns and randomization
+
+### 6. Unified Logging & Monitoring
+- **Universal Logging**: All modules log to unified `bin/debug.log`
+- **Real-Time Monitoring**: Live status updates and diagnostics
+- **Performance Metrics**: Automatic performance monitoring and optimization
+- **Error Recovery**: Comprehensive error handling and automatic recovery
 
 ---
 
