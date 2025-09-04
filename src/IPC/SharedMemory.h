@@ -31,6 +31,8 @@ public:
     bool Read(void* data, size_t size);
     void Close();
     bool IsValid() const { return m_hMap != nullptr && m_pData != nullptr; }
+    void* GetData() { return m_pData; }
+    const void* GetData() const { return m_pData; }
     
     // Static interface for easy access
     static bool Write(const GameDataPacket& packet);

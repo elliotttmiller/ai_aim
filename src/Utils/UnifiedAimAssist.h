@@ -1,32 +1,25 @@
 #pragma once
 
 /**
- * Unified Advanced Aim Assist System
+ * Real Aim Assist System for AimTrainer
  * 
- * Consolidates and optimizes all aim assist functionality into a single,
- * production-ready system that provides professional-grade aim assistance
- * with anti-detection measures, cross-game compatibility, and autonomous operation.
- * 
- * Key Features:
- * - Universal targeting algorithms for all game types
- * - Advanced smoothing and prediction systems
- * - Anti-detection humanization
- * - Performance optimization with adaptive quality
- * - Professional memory injection integration
- * - Cross-platform compatibility
- * - Autonomous game detection and adaptation
+ * Professional aim assistance for legitimate aim training applications.
+ * Reads data from AimTrainer via IPC and provides smooth aim assistance.
  */
 
 #include "../Utils/UnifiedUtilities.h"
-#include "../Utils/UnifiedMemoryScanner.h"
 #include "../Utils/UnifiedConfig.h"
 #include "../Utils/GameDetection.h"
 #include "../Utils/Logger.h"
-#include "../IPC/SharedMemory.h"
+#include "../IPC/SharedStructs.h"
 #include <vector>
 #include <memory>
 #include <chrono>
 #include <random>
+#include <unordered_map>
+
+// Forward declarations
+class SharedMemory;
 
 // Cross-platform input simulation
 #ifdef _WIN32
@@ -74,12 +67,12 @@ enum class TargetingStrategy {
     Adaptive          // Intelligently switch strategies
 };
 
-// Comprehensive aim assist configuration
+// Comprehensive aim assist configuration (simplified)
 struct UnifiedAimConfig {
     // Core settings
     bool enabled = true;
     AimMode mode = AimMode::Assist;
-    TargetingStrategy strategy = TargetingStrategy::Adaptive;
+    TargetingStrategy strategy = TargetingStrategy::Crosshair;
     
     // Sensitivity and range
     float sensitivity = 0.5f;           // Overall sensitivity (0.0 - 1.0)
@@ -88,106 +81,35 @@ struct UnifiedAimConfig {
     
     // Smoothing and movement
     float smoothing = 0.7f;             // Movement smoothing (0.0 - 1.0)
-    float acceleration = 1.0f;          // Acceleration curve
     float decelerationZone = 10.0f;    // Pixels from target to start slowing down
     
     // Prediction and timing
     bool enablePrediction = true;       // Lead moving targets
     float predictionStrength = 0.5f;    // Prediction multiplier
-    bool enableAutoTrigger = false;     // Automatically fire when on target
-    float autoTriggerThreshold = 5.0f;  // Pixels from target center
     
-    // Anti-detection and humanization
+    // Humanization
     bool humanization = true;           // Add human-like imperfections
     float jitterAmount = 0.1f;          // Random movement variation
-    bool respectRecoil = true;          // Account for weapon recoil
     float reactionTimeMs = 50.0f;       // Simulated human reaction time
     
-    // Performance optimization
+    // Performance
     int updateFrequency = 60;           // Updates per second
-    bool adaptivePerformance = true;    // Reduce frequency when not needed
-    int maxTargetsPerFrame = 20;        // Limit targets processed per frame
-    bool enableObjectPooling = true;    // Use object pooling for performance
-    bool enableMultiThreading = true;   // Enable multi-threaded processing
-    bool enableSmartCaching = true;     // Intelligent memory caching
-    int memoryPoolSize = 100;           // Pre-allocated target pool size
-    
-    // Visual feedback (for debugging/development)
-    bool drawFov = true;
-    bool drawTargets = true;
-    bool drawTrajectory = false;
-    float fovColor[4] = {0.0f, 1.0f, 0.0f, 0.5f};  // Green semi-transparent
-    float targetColor[4] = {1.0f, 0.0f, 0.0f, 0.8f}; // Red
 };
 
-// Universal target representation
+// Simplified target representation
 struct UniversalTarget {
     Vec3 worldPosition;
     Vec3 screenPosition;
     Vec3 predictedPosition;
     Vec3 velocity;
-    Vec3 velocityHistory[5];        // Track velocity history for better prediction
     float priority = 0.0f;
     float distance = 0.0f;
-    float health = 100.0f;
-    float threatLevel = 0.0f;       // Dynamic threat assessment
     bool visible = false;
-    bool tracked = false;
-    bool isEnemy = true;
-    int velocityHistoryIndex = 0;   // Current index in velocity history
+    bool active = false;
     std::chrono::steady_clock::time_point lastSeen;
-    std::chrono::steady_clock::time_point firstSeen;
-    std::chrono::steady_clock::time_point lastVelocityUpdate;
-    
-    // Game-specific data
-    uintptr_t entityAddress = 0;
-    uint32_t entityId = 0;
-    std::string entityType;
-    
-    // Performance optimization: Object pooling support
-    bool inUse = false;
-    int poolIndex = -1;
-    
-    // Calculate average velocity from history for better prediction
-    Vec3 GetAverageVelocity() const {
-        Vec3 avg(0, 0, 0);
-        int count = 0;
-        for (int i = 0; i < 5; ++i) {
-            if (velocityHistory[i].Length() > 0.001f) {
-                avg += velocityHistory[i];
-                count++;
-            }
-        }
-        return count > 0 ? avg * (1.0f / count) : Vec3(0, 0, 0);
-    }
-    
-    // Get velocity acceleration for advanced prediction
-    Vec3 GetVelocityAcceleration() const {
-        if (velocityHistoryIndex < 2) return Vec3(0, 0, 0);
-        int curr = velocityHistoryIndex;
-        int prev = (curr - 1 + 5) % 5;
-        return velocityHistory[curr] - velocityHistory[prev];
-    }
-    
-    // Update velocity history with new velocity
-    void UpdateVelocityHistory(const Vec3& newVelocity) {
-        velocityHistory[velocityHistoryIndex] = newVelocity;
-        velocityHistoryIndex = (velocityHistoryIndex + 1) % 5;
-        velocity = newVelocity;
-        lastVelocityUpdate = std::chrono::steady_clock::now();
-    }
     
     UniversalTarget() {
-        auto now = std::chrono::steady_clock::now();
-        lastSeen = firstSeen = lastVelocityUpdate = now;
-        // Initialize velocity history
-        for (int i = 0; i < 5; ++i) {
-            velocityHistory[i] = Vec3(0, 0, 0);
-        }
-    }
-    float GetAge() const {
-        auto now = std::chrono::steady_clock::now();
-        return std::chrono::duration<float, std::milli>(now - firstSeen).count();
+        lastSeen = std::chrono::steady_clock::now();
     }
     
     // Calculate time since last seen in milliseconds
@@ -198,10 +120,7 @@ struct UniversalTarget {
 };
 
 /**
- * Unified Advanced Aim Assist System
- * 
- * Production-ready aim assist with professional algorithms,
- * anti-detection measures, and autonomous operation.
+ * Real Aim Assist System for AimTrainer
  */
 class UnifiedAimAssist {
 public:
@@ -230,41 +149,13 @@ public:
     void SelectTarget(UniversalTarget* target) { m_currentTarget = target; }
     void ClearTarget() { m_currentTarget = nullptr; }
     
-    // Game adaptation
+    // Game adaptation (simplified)
     void AdaptToGameType(GameGenre genre);
     void AdaptToEngine(GameEngine engine);
-    void CalibrateForGame();
     
-    // Performance and threading optimization
-    void EnableOptimizations(bool enable = true);
-    void SetThreadingMode(bool enable) { m_config.enableMultiThreading = enable; }
-    void OptimizeForSystemLoad(float cpuUsage, float memoryUsage);
-    void PreloadConfiguration();
-    
-    // Advanced prediction and intelligence
-    void UpdateTargetPrediction(UniversalTarget& target);
-    Vec3 CalculateAdvancedPrediction(const UniversalTarget& target, float timeAhead);
-    float CalculateTargetBehaviorPattern(const UniversalTarget& target);
-    void UpdateThreatAssessment();
-    
-    // Performance monitoring
-    float GetAverageFrameTime() const { return m_averageFrameTime; }
+    // Basic metrics
     size_t GetTargetCount() const { return m_visibleTargets.size(); }
     float GetCurrentAccuracy() const;
-    float GetCurrentPerformance() const;
-    float GetSystemLoad() const;
-    size_t GetMemoryUsage() const;
-    
-    // Visual debugging (for development)  
-    void DrawDebugOverlay();
-    void DrawFOVCircle();
-    void DrawTargets();
-    void DrawTrajectory();
-    
-    // Diagnostics
-    std::vector<std::string> GetDebugInfo() const;
-    std::vector<std::string> GetPerformanceMetrics() const;
-    void LogStatus() const;
 
 private:
     UnifiedAimAssist() = default;
@@ -281,156 +172,65 @@ private:
     void ExecuteAiming();
     void ApplyMouseMovement();
     
-    // Target detection and analysis
-    std::vector<UniversalTarget> DetectTargetsInMemory();
-    void UpdateTargetPositions();
-    bool IsTargetValid(const UniversalTarget& target);
-    bool IsTargetVisible(const UniversalTarget& target);
+    // Target analysis
+    bool IsTargetValid(const UniversalTarget& target) { return target.active && target.visible; }
+    bool IsTargetVisible(const UniversalTarget& target) { return target.visible; }
     float CalculateTargetPriority(const UniversalTarget& target);
-    float CalculateTargetThreat(const UniversalTarget& target);
     
     // Aim calculations
     Vec3 CalculateAimDirection(const UniversalTarget& target);
-    Vec3 ApplyPrediction(const UniversalTarget& target);
     Vec3 ApplySmoothing(const Vec3& desired, const Vec3& current);
     Vec3 ApplyHumanization(const Vec3& calculated);
     Vec3 CalculateMouseDelta(const Vec3& from, const Vec3& to);
     
+    // Prediction
+    void UpdateTargetPrediction(UniversalTarget& target);
+    
     // World-to-screen conversion
     bool WorldToScreen(const Vec3& worldPos, Vec3& screenPos);
-    bool ScreenToWorld(const Vec3& screenPos, Vec3& worldPos);
-    bool UpdateViewMatrix();
-    bool DetectCameraSystem();
     bool DetectScreenResolution();
     
-    // Input simulation and control
+    // Input simulation
     void SimulateMouseMovement(const Vec3& delta);
-    void SimulateMouseClick();
-    bool ShouldAutoTrigger() const;
     bool IsAimingKeyPressed() const;
-    
-    // Anti-detection measures
-    void AddHumanLikeJitter(Vec3& movement);
-    void LimitMovementSpeed(Vec3& movement);
-    void SimulateHumanReactionTime();
-    void AddRandomDelay();
-    
-    // Performance optimization and threading
-    void OptimizeMemoryAccess();
-    void ParallelizeTargetProcessing();
-    void UpdateTargetPool();
-    UniversalTarget* GetPooledTarget();
-    void ReturnTargetToPool(UniversalTarget* target);
-    
-    // Simple prediction algorithms (no fake AI)
-    Vec3 ApplySimplePrediction(const UniversalTarget& target);
-    Vec3 PredictWithAcceleration(const UniversalTarget& target, float timeMs);
-    float CalculateInterceptionTime(const UniversalTarget& target);
-    
-    // Intelligence and behavior optimization
-    void AnalyzePlayerBehavior();
-    void AdaptToGamePace();
-    void UpdateBehaviorPattern(const UniversalTarget& target);
-    float ScoreTargetIntelligence(const UniversalTarget& target);
-    
-    // Performance optimization
-    void OptimizeUpdateFrequency();
-    bool ShouldSkipFrame();
-    void ReduceQualityForPerformance();
-    void UpdatePerformanceMetrics();
-    
-    // Memory scanning integration with caching
-    bool InitializeMemoryScanning();
-    void UpdateMemoryPatterns();
-    uintptr_t FindEntityListBase();
-    std::vector<uintptr_t> ScanForEntities();
-    void CacheMemoryAddresses();
-    bool ValidateMemoryCache();
     
     // Configuration and state
     UnifiedAimConfig m_config;
     bool m_initialized = false;
-    bool m_memoryInitialized = false;
     
-    // Target management with object pooling
+    // Target management
     UniversalTarget* m_currentTarget = nullptr;
     std::vector<UniversalTarget> m_visibleTargets;
-    std::vector<UniversalTarget> m_targetHistory;
-    std::vector<UniversalTarget> m_targetPool;  // Object pool for performance
-    std::vector<bool> m_poolUsage;             // Track pool usage
-    
-    // Advanced behavior analysis
-    struct BehaviorPattern {
-        float averageMovementSpeed = 0.0f;
-        float averageDirectionChange = 0.0f;
-        float predictabilityScore = 0.0f;
-        std::chrono::steady_clock::time_point lastUpdate;
-    };
-    std::unordered_map<uint32_t, BehaviorPattern> m_behaviorPatterns;
     
     // Camera and rendering state
-    float m_viewMatrix[16] = {0};
-    int m_screenWidth = 1920;
-    int m_screenHeight = 1080;
-    bool m_cameraValid = false;
+    int m_screenWidth = 1280;
+    int m_screenHeight = 720;
     Vec3 m_cameraPosition;
-    Vec3 m_cameraRotation;
     
-    // Timing and performance
+    // Timing
     std::chrono::steady_clock::time_point m_lastUpdate;
     std::chrono::steady_clock::time_point m_lastTargetScan;
     std::chrono::steady_clock::time_point m_lastMouseMovement;
-    float m_averageFrameTime = 16.67f; // 60 FPS default
-    float m_totalFrameTime = 0.0f;
-    size_t m_frameCounter = 0;
+    std::chrono::steady_clock::time_point m_lastReactionTime;
     
     // Smoothing and movement state
     Vec3 m_lastAimDirection;
     Vec3 m_currentVelocity;
-    Vec3 m_smoothingBuffer[10] = {{0,0,0}}; // Moving average buffer
+    Vec3 m_smoothingBuffer[10] = {{0,0,0}};
     int m_smoothingIndex = 0;
     
-    // Anti-detection and humanization
-    std::chrono::steady_clock::time_point m_lastReactionTime;
-    float m_currentReactionDelay = 0.0f;
-    Vec3 m_jitterOffset;
+    // Humanization
     std::random_device m_randomDevice;
     std::mt19937 m_randomGenerator;
     std::uniform_real_distribution<float> m_jitterDistribution;
     
-    // Performance tracking and optimization
-    float m_accuracyHistory[100] = {0}; // Last 100 shots
-    int m_accuracyIndex = 0;
-    float m_performanceHistory[60] = {0}; // Last 60 frames
-    int m_performanceIndex = 0;
-    float m_systemLoadHistory[30] = {0}; // System load tracking
-    int m_systemLoadIndex = 0;
-    size_t m_memoryUsage = 0;
+    // Real IPC communication with AimTrainer
+    std::unique_ptr<SharedMemory> m_sharedMemory;
     
-    // Intelligent caching system
-    struct MemoryCache {
-        uintptr_t address;
-        std::chrono::steady_clock::time_point lastUpdate;
-        bool valid;
-    };
-    std::unordered_map<std::string, MemoryCache> m_memoryCache;
-    std::chrono::steady_clock::time_point m_lastCacheValidation;
-    
-    // Memory scanning integration with unified system
-    std::unique_ptr<UnifiedMemoryScanner> m_memoryScanner;
-    uintptr_t m_entityListBase = 0;
-    uintptr_t m_localPlayerBase = 0;
-    uintptr_t m_viewMatrixBase = 0;
-    
-    // Constants for tuning
+    // Constants
     static constexpr float DEFAULT_FOV = 90.0f;
-    static constexpr float MIN_TARGET_DISTANCE = 1.0f;
-    static constexpr float MAX_MOUSE_SPEED = 50.0f; // pixels per frame
-    static constexpr int TARGET_HISTORY_SIZE = 50;
-    static constexpr int MAX_TARGETS_PER_FRAME = 20;
+    static constexpr float MAX_MOUSE_SPEED = 50.0f;
     static constexpr float PREDICTION_LOOKAHEAD_MS = 100.0f;
-    static constexpr float HUMANIZATION_VARIANCE = 0.05f;
-    static constexpr float PERFORMANCE_THRESHOLD = 30.0f; // ms
 };
 
 // Utility functions for aim assist calculations
