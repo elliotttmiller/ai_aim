@@ -30,21 +30,29 @@ endif()
 # Include directories for our project and libs
 target_include_directories(Overlay PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/libs/dear-imgui
     ${CMAKE_SOURCE_DIR}/libs/dear-imgui/backends
     ${CMAKE_SOURCE_DIR}/libs/minhook/include
     ${CMAKE_SOURCE_DIR}/libs/raylib/src
     ${CMAKE_CURRENT_SOURCE_DIR}/IPC
     ${CMAKE_SOURCE_DIR}/src/Utils
+    ${CMAKE_SOURCE_DIR}/src/Universal
 )
 
-# Link against necessary libraries
+# Link against necessary libraries including Universal
 target_link_libraries(Overlay PRIVATE
     imgui
     minhook
     dxgi
     opengl32
+    d3d11
+    d3d12
+    vulkan-1
     Utils
+    Universal
+    psapi
+    advapi32
 )
 
 # Post-build: Copy Overlay.dll to bin/Debug for launcher/injector

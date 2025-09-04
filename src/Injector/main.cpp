@@ -6,47 +6,42 @@
 #include <fstream>
 #include "../Overlay/IPC/SharedMemory.h"
 #include "../Utils/Logger.h"
-#include "c:/Users/AMD/ai_aim/src/Utils/StringConvert.h"
+#include "../Utils/StringConvert.h"
 #include <tlhelp32.h>
 #include "../IPC/SharedStructs.h"
+#include "../Universal/GameDetection.h"
+#include "../Universal/InjectionManager.h"
 
-// Finds the process ID for a given process name
+// Legacy function for compatibility - now wraps universal detection
 DWORD GetProcId(const wchar_t* procName) {
-    DWORD procId = 0;
-    HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if (hSnap != INVALID_HANDLE_VALUE) {
-        PROCESSENTRY32W procEntry;
-        procEntry.dwSize = sizeof(procEntry);
-        if (Process32FirstW(hSnap, &procEntry)) {
-            do {
-                if (!_wcsicmp(procEntry.szExeFile, procName)) {
-                    procId = procEntry.th32ProcessID;
-                    break;
-                }
-            } while (Process32NextW(hSnap, &procEntry));
+    auto gameProcesses = UniversalGameDetection::GetInstance().DetectGameProcesses();
+    for (const auto& process : gameProcesses) {
+        if (_wcsicmp(process.processName.c_str(), procName) == 0) {
+            return process.processId;
         }
     }
-    CloseHandle(hSnap);
-    return procId;
+    return 0;
 }
 
-// Autonomous game process detection
-std::wstring DetectGameProcess() {
-    HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if (hSnap == INVALID_HANDLE_VALUE) return L"";
-    PROCESSENTRY32W procEntry;
-    procEntry.dwSize = sizeof(PROCESSENTRY32W);
-    if (Process32FirstW(hSnap, &procEntry)) {
-        do {
-            std::wstring exe(procEntry.szExeFile);
-            if (exe.find(L"Trainer") != std::wstring::npos || exe.find(L"Aim") != std::wstring::npos) {
-                CloseHandle(hSnap);
-                return exe;
-            }
-        } while (Process32NextW(hSnap, &procEntry));
+// Universal autonomous game process detection
+GameProcessInfo DetectBestGameProcess() {
+    auto& detector = UniversalGameDetection::GetInstance();
+    auto gameProcesses = detector.DetectGameProcesses();
+    
+    if (gameProcesses.empty()) {
+        Logger::Get().Log("Injector", "No game processes detected");
+        return {};
     }
-    CloseHandle(hSnap);
-    return L"";
+    
+    // Return the game with highest confidence
+    auto bestGame = gameProcesses[0]; // Already sorted by confidence
+    Logger::Get().Log("Injector", "Selected target: " + 
+        std::string(bestGame.processName.begin(), bestGame.processName.end()) +
+        " (Confidence: " + std::to_string(bestGame.confidence) + 
+        ", Engine: " + std::to_string(static_cast<int>(bestGame.engine)) + 
+        ", Graphics: " + std::to_string(static_cast<int>(bestGame.graphicsAPI)) + ")");
+    
+    return bestGame;
 }
 
 // Autonomous DLL/config detection
@@ -61,83 +56,79 @@ std::filesystem::path FindFile(const std::string& pattern) {
 
 int main(int /*argc*/, char** /*argv*/) {
     Logger::Get().InitDefault();
-    Logger::Get().Log("Injector", "Initializing...");
+    Logger::Get().Log("Injector", "Universal Game Injection System v2.0 - Initializing...");
 
-    // Autonomous detection
-    std::wstring gameProcessName = DetectGameProcess();
+    // Universal autonomous detection
+    GameProcessInfo targetGame = DetectBestGameProcess();
+    if (targetGame.processId == 0) {
+        Logger::Get().Log("Injector", "Error: No suitable game process detected. Please ensure a supported game is running.");
+        return 1;
+    }
+
+    // Autonomous DLL detection
     std::filesystem::path dllPath = FindFile("Overlay.dll");
-    std::filesystem::path configPath = FindFile("game_memory.cfg");
-
-    if (gameProcessName.empty() || dllPath.empty() || configPath.empty()) {
-        Logger::Get().Log("Injector", "Error: Could not auto-detect game process, DLL, or config.");
+    if (dllPath.empty()) {
+        Logger::Get().Log("Injector", "Error: Could not find Overlay.dll. Please ensure it's built and available.");
         return 1;
     }
 
-    // Read config
-    std::ifstream cfg(configPath);
-    if (!cfg.is_open()) {
-        Logger::Get().Log("Injector", "Error: Could not open config file: " + WStringToString(configPath.wstring()));
-        return 1;
-    }
-    // Use double backslashes for Windows paths
-    if (gameProcessName.empty()) gameProcessName = L"AimTrainer.exe";
-    std::wstring dllName = dllPath.wstring();
+    // Analyze target process for optimal injection method
+    auto& injectionManager = UniversalInjectionManager::GetInstance();
+    ProcessAnalysis analysis = injectionManager.AnalyzeTargetProcess(targetGame.processId);
+    
+    Logger::Get().Log("Injector", "Process Analysis:");
+    Logger::Get().Log("Injector", "  - Anti-cheat: " + std::to_string(static_cast<int>(analysis.antiCheat)));
+    Logger::Get().Log("Injector", "  - Protected: " + std::string(analysis.isProtected ? "Yes" : "No"));
+    Logger::Get().Log("Injector", "  - Requires elevation: " + std::string(analysis.requiresElevation ? "Yes" : "No"));
+    Logger::Get().Log("Injector", "  - 64-bit: " + std::string(analysis.supports64Bit ? "Yes" : "No"));
 
+    // Get full DLL path
     wchar_t fullDllPath[MAX_PATH];
-    if (!GetFullPathNameW(dllName.c_str(), MAX_PATH, fullDllPath, nullptr)) {
+    if (!GetFullPathNameW(dllPath.wstring().c_str(), MAX_PATH, fullDllPath, nullptr)) {
         Logger::Get().Log("Injector", "Error: Could not get full path to DLL.");
         return 1;
     }
+    
     if (!std::filesystem::exists(std::wstring(fullDllPath))) {
-        Logger::Get().Log("Injector", "Error: DLL file not found at " + WStringToString(fullDllPath));
+        Logger::Get().Log("Injector", "Error: DLL file not found at " + std::string(fullDllPath, fullDllPath + wcslen(fullDllPath)));
         return 1;
     }
-    Logger::Get().Log("Injector", "Searching for process: " + WStringToString(gameProcessName));
-    DWORD procId = GetProcId(gameProcessName.c_str());
-    if (procId == 0) {
-        Logger::Get().Log("Injector", "Error: Target process not found. Is it running?");
+
+    // Perform injection using optimal method
+    Logger::Get().Log("Injector", "Injecting into " + std::string(targetGame.processName.begin(), targetGame.processName.end()));
+    Logger::Get().Log("Injector", "DLL Path: " + std::string(fullDllPath, fullDllPath + wcslen(fullDllPath)));
+    
+    // Enable stealth mode for protected processes
+    if (analysis.isProtected || analysis.antiCheat != AntiCheatSystem::NONE) {
+        injectionManager.EnableStealthMode(true);
+        injectionManager.SetRandomizationLevel(8); // High randomization for protected processes
+        injectionManager.EnableDelayRandomization(true);
+        Logger::Get().Log("Injector", "Stealth mode enabled for protected process");
+    }
+
+    InjectionResult result = injectionManager.InjectIntoProcess(targetGame.processId, fullDllPath);
+    
+    if (result.success) {
+        Logger::Get().Log("Injector", "SUCCESS: DLL injected successfully using method: " + 
+            std::to_string(static_cast<int>(result.methodUsed)));
+        Logger::Get().Log("Injector", "Thread ID: " + std::to_string(result.injectedThreadId));
+        Logger::Get().Log("Injector", "Universal overlay should now be active for any compatible game");
+        
+        // Monitor injection for potential detection
+        injectionManager.MonitorInjection(targetGame.processId, [](bool detected) {
+            if (detected) {
+                Logger::Get().Log("Injector", "WARNING: Injection may have been detected by anti-cheat");
+            }
+        });
+        
+    } else {
+        Logger::Get().Log("Injector", "FAILED: DLL injection failed: " + result.errorMessage);
+        if (result.detectedByAntiCheat) {
+            Logger::Get().Log("Injector", "NOTE: Injection was likely blocked by anti-cheat system");
+        }
         return 1;
     }
-    Logger::Get().Log("Injector", "Process found! PID: " + std::to_string(procId));
-    Logger::Get().Log("Injector", "Injecting DLL: " + WStringToString(fullDllPath));
-    // DLL Injection (Manual)
-    HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, procId);
-    if (!hProcess) {
-        Logger::Get().Log("Injector", "Error: Could not open target process.");
-        return 1;
-    }
-    size_t dllPathLen = (wcslen(fullDllPath) + 1) * sizeof(wchar_t);
-    LPVOID pRemoteDllPath = VirtualAllocEx(hProcess, nullptr, dllPathLen, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-    if (!pRemoteDllPath) {
-        Logger::Get().Log("Injector", "Error: Could not allocate memory in target process.");
-        CloseHandle(hProcess);
-        return 1;
-    }
-    if (!WriteProcessMemory(hProcess, pRemoteDllPath, fullDllPath, dllPathLen, nullptr)) {
-        Logger::Get().Log("Injector", "Error: Could not write DLL path to target process.");
-        VirtualFreeEx(hProcess, pRemoteDllPath, 0, MEM_RELEASE);
-        CloseHandle(hProcess);
-        return 1;
-    }
-    HMODULE hKernel32 = GetModuleHandleW(L"kernel32.dll");
-    FARPROC pLoadLibraryW = GetProcAddress(hKernel32, "LoadLibraryW");
-    if (!pLoadLibraryW) {
-        Logger::Get().Log("Injector", "Error: Could not get address of LoadLibraryW.");
-        VirtualFreeEx(hProcess, pRemoteDllPath, 0, MEM_RELEASE);
-        CloseHandle(hProcess);
-        return 1;
-    }
-    HANDLE hThread = CreateRemoteThread(hProcess, nullptr, 0, (LPTHREAD_START_ROUTINE)pLoadLibraryW, pRemoteDllPath, 0, nullptr);
-    if (!hThread) {
-        Logger::Get().Log("Injector", "Error: Could not create remote thread in target process.");
-        VirtualFreeEx(hProcess, pRemoteDllPath, 0, MEM_RELEASE);
-        CloseHandle(hProcess);
-        return 1;
-    }
-    Logger::Get().Log("Injector", "DLL injected successfully.");
-    WaitForSingleObject(hThread, 5000);
-    VirtualFreeEx(hProcess, pRemoteDllPath, 0, MEM_RELEASE);
-    CloseHandle(hThread);
-    CloseHandle(hProcess);
-    Logger::Get().Log("Injector", "Injection routine complete. Overlay should be active.");
+
+    Logger::Get().Log("Injector", "Universal injection routine complete. System operational.");
+    return 0;
 }

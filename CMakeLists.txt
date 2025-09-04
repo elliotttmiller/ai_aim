@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(ai_aim)
+project(ai_aim_universal)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -18,28 +18,40 @@ add_subdirectory(libs/minhook)
 # Build dear-imgui
 add_subdirectory(libs/dear-imgui)
 
-# Build Utils and IPC modules if they have their own CMakeLists.txt
+# Build Utils module (required by Universal)
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/Utils/CMakeLists.txt")
     add_subdirectory(src/Utils)
 endif()
+
+# Build Universal module (required by all other modules)
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/Universal/CMakeLists.txt")
+    add_subdirectory(src/Universal)
+endif()
+
+# Build IPC module
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/IPC/CMakeLists.txt")
     add_subdirectory(src/IPC)
 endif()
 
-# Build Overlay
+# Build Overlay (depends on Universal)
 add_subdirectory(src/Overlay)
 
-# Build Injector
+# Build Injector (depends on Universal)
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/Injector/CMakeLists.txt")
     add_subdirectory(src/Injector)
 endif()
 
-# Build Launcher
+# Build Launcher (depends on Universal)
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/Launcher/CMakeLists.txt")
     add_subdirectory(src/Launcher)
 endif()
 
-# Build InjectedDLL
+# Build AimTrainer (test application)
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/AimTrainer/CMakeLists.txt")
+    add_subdirectory(src/AimTrainer)
+endif()
+
+# Build InjectedDLL (legacy test)
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/InjectedDLL/CMakeLists.txt")
     add_subdirectory(src/InjectedDLL)
 endif()

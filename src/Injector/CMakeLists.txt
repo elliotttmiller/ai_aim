@@ -1,3 +1,4 @@
+# src/Injector/CMakeLists.txt
 cmake_minimum_required(VERSION 3.16)
 project(Injector)
 
@@ -6,10 +7,26 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(Injector main.cpp)
 
-# Link with Utils for Logger and string conversion
+# Include directories for our project
+target_include_directories(Injector PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/Utils
+    ${CMAKE_SOURCE_DIR}/src/Universal
+    ${CMAKE_SOURCE_DIR}/src/Overlay/IPC
+)
+
+# Link against necessary libraries including Universal
 find_package(Threads REQUIRED)
-target_link_libraries(Injector PRIVATE Utils IPC Threads::Threads)
-target_include_directories(Injector PRIVATE ${CMAKE_SOURCE_DIR}/src/Overlay/IPC)
+target_link_libraries(Injector PRIVATE 
+    Utils 
+    IPC 
+    Universal
+    Threads::Threads
+    psapi
+    advapi32
+    kernel32
+    user32
+)
 
 # Output directories
 set_target_properties(Injector PROPERTIES 

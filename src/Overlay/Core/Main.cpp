@@ -10,27 +10,45 @@
 #include "AimAssist/AimAssist.h"
 #include "Memory/GameData.h"
 #include "../../Utils/Logger.h"
+#include "../Universal/GameDetection.h"
+#include "../Universal/GraphicsDetection.h"
+#include "../Universal/AimSystem.h"
 #pragma comment(lib, "dwmapi.lib")
 
 extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND, UINT, WPARAM, LPARAM);
 
 namespace Core {
-    const wchar_t* OVERLAY_WINDOW_CLASS_NAME = L"AI_AIM_OverlayWindow";
+    const wchar_t* OVERLAY_WINDOW_CLASS_NAME = L"AI_AIM_UniversalOverlay";
+    
+    // Universal game process detection - replaces hardcoded "AimTrainer.exe"
     DWORD FindGamePID() {
-        HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-        if (snap == INVALID_HANDLE_VALUE) return 0;
-        PROCESSENTRY32W entry = { sizeof(entry) };
-        DWORD pid = 0;
-        if (Process32FirstW(snap, &entry)) {
-            do {
-                if (wcscmp(entry.szExeFile, L"AimTrainer.exe") == 0) {
-                    pid = entry.th32ProcessID;
-                    break;
-                }
-            } while (Process32NextW(snap, &entry));
+        auto& detector = UniversalGameDetection::GetInstance();
+        auto gameProcesses = detector.DetectGameProcesses();
+        
+        if (gameProcesses.empty()) {
+            Logger::Get().Log("OverlayCore", "No game processes detected for overlay attachment");
+            return 0;
         }
-        CloseHandle(snap);
-        return pid;
+        
+        // Get the current process ID to find the process we're injected into
+        DWORD currentPID = GetCurrentProcessId();
+        
+        // First, try to find the current process in the game list (we're injected)
+        for (const auto& game : gameProcesses) {
+            if (game.processId == currentPID) {
+                Logger::Get().Log("OverlayCore", "Found injected game process: " + 
+                    std::string(game.processName.begin(), game.processName.end()) +
+                    " (Engine: " + std::to_string(static_cast<int>(game.engine)) + 
+                    ", Graphics: " + std::to_string(static_cast<int>(game.graphicsAPI)) + ")");
+                return game.processId;
+            }
+        }
+        
+        // If not found, return the highest confidence game process
+        auto bestGame = gameProcesses[0]; // Already sorted by confidence
+        Logger::Get().Log("OverlayCore", "Using highest confidence game process: " + 
+            std::string(bestGame.processName.begin(), bestGame.processName.end()));
+        return bestGame.processId;
     }
     HWND FindWindowByPID(DWORD pid) {
         struct EnumData { DWORD pid; HWND hwnd; };
@@ -105,50 +123,182 @@ namespace Core {
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     }
-    void Cleanup(HDC hdc, HGLRC hglrc, HWND overlayHwnd) {
-        Logger::Get().Log("OverlayCore", "Cleanup initiated.");
-        ImGui_ImplOpenGL3_Shutdown();
-        ImGui_ImplWin32_Shutdown();
-        ImGui::DestroyContext();
-        wglMakeCurrent(nullptr, nullptr);
-        wglDeleteContext(hglrc);
-        ReleaseDC(overlayHwnd, hdc);
-        DestroyWindow(overlayHwnd);
-        // IPC pipe cleanup is handled in MainLoop
+    void CleanupUniversal(UniversalGraphicsDetection& graphicsDetector, UniversalAimSystem& aimSystem) {
+        Logger::Get().Log("OverlayCore", "Universal cleanup initiated");
+        
+        // Cleanup aim system
+        aimSystem.Cleanup();
+        
+        // Cleanup graphics system
+        graphicsDetector.ShutdownImGui();
+        graphicsDetector.DestroyOverlay();
+        graphicsDetector.RemoveHooks();
+        graphicsDetector.Cleanup();
+        
+        Logger::Get().Log("OverlayCore", "Universal cleanup complete");
+    }
+    
+    void RenderUniversalUI(const GameProcessInfo& gameInfo, UniversalAimSystem& aimSystem) {
+        // Universal overlay UI that adapts to any game
+        ImGui::Begin("AI_AIM Universal Overlay", nullptr, 
+            ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | 
+            ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
+            ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoBackground);
+        
+        // Display game information
+        ImGui::Text("Target: %s", std::string(gameInfo.processName.begin(), gameInfo.processName.end()).c_str());
+        ImGui::Text("Engine: %s", GetEngineString(gameInfo.engine));
+        ImGui::Text("Genre: %s", GetGenreString(gameInfo.genre));
+        ImGui::Text("Graphics: %s", GetGraphicsAPIString(gameInfo.graphicsAPI));
+        ImGui::Text("Confidence: %.1f%%", gameInfo.confidence * 100.0f);
+        
+        ImGui::Separator();
+        
+        // Aim system controls
+        if (aimSystem.IsActive()) {
+            const auto& settings = aimSystem.GetSettings();
+            const auto& state = aimSystem.GetState();
+            
+            ImGui::Text("Aim System: ACTIVE");
+            ImGui::Text("Mode: %s", GetAimModeString(settings.mode));
+            ImGui::Text("Targeting: %s", state.isTargeting ? "YES" : "NO");
+            ImGui::Text("Accuracy: %.1f%%", state.averageAccuracy * 100.0f);
+            
+            // Real-time aim settings
+            float fov = settings.fovRadius;
+            if (ImGui::SliderFloat("FOV", &fov, 10.0f, 180.0f)) {
+                auto newSettings = settings;
+                newSettings.fovRadius = fov;
+                aimSystem.SetSettings(newSettings);
+            }
+            
+            float smoothness = settings.smoothness;
+            if (ImGui::SliderFloat("Smoothness", &smoothness, 0.0f, 1.0f)) {
+                auto newSettings = settings;
+                newSettings.smoothness = smoothness;
+                aimSystem.SetSettings(newSettings);
+            }
+        } else {
+            ImGui::Text("Aim System: DISABLED");
+            if (ImGui::Button("Enable")) {
+                aimSystem.SetEnabled(true);
+            }
+        }
+        
+        ImGui::End();
+    }
+    
+    const char* GetEngineString(GameEngine engine) {
+        switch (engine) {
+            case GameEngine::UNITY: return "Unity";
+            case GameEngine::UNREAL: return "Unreal";
+            case GameEngine::SOURCE: return "Source";
+            case GameEngine::CRYENGINE: return "CryEngine";
+            case GameEngine::IDTECH: return "id Tech";
+            case GameEngine::CUSTOM: return "Custom";
+            default: return "Unknown";
+        }
+    }
+    
+    const char* GetGenreString(GameGenre genre) {
+        switch (genre) {
+            case GameGenre::FPS: return "FPS";
+            case GameGenre::TPS: return "TPS";
+            case GameGenre::RTS: return "RTS";
+            case GameGenre::MOBA: return "MOBA";
+            case GameGenre::MMO: return "MMO";
+            case GameGenre::RACING: return "Racing";
+            case GameGenre::STRATEGY: return "Strategy";
+            default: return "Unknown";
+        }
+    }
+    
+    const char* GetGraphicsAPIString(GraphicsAPI api) {
+        switch (api) {
+            case GraphicsAPI::DIRECTX9: return "DirectX 9";
+            case GraphicsAPI::DIRECTX11: return "DirectX 11";
+            case GraphicsAPI::DIRECTX12: return "DirectX 12";
+            case GraphicsAPI::OPENGL: return "OpenGL";
+            case GraphicsAPI::VULKAN: return "Vulkan";
+            default: return "Unknown";
+        }
+    }
+    
+    const char* GetAimModeString(AimMode mode) {
+        switch (mode) {
+            case AimMode::SILENT_AIM: return "Silent";
+            case AimMode::SMOOTH_AIM: return "Smooth";
+            case AimMode::PREDICTIVE_AIM: return "Predictive";
+            case AimMode::SNAP_AIM: return "Snap";
+            case AimMode::HUMANIZED_AIM: return "Humanized";
+            case AimMode::ADAPTIVE_AIM: return "Adaptive";
+            default: return "Disabled";
+        }
     }
 }
 
 void Main::MainLoop() {
-    Logger::Get().Log("OverlayCore", "MainLoop started.");
+    Logger::Get().Log("OverlayCore", "Universal Overlay MainLoop started - supports ANY Windows game");
+    
+    // Initialize universal systems
+    auto& gameDetector = UniversalGameDetection::GetInstance();
+    auto& graphicsDetector = UniversalGraphicsDetection::GetInstance();
+    auto& aimSystem = UniversalAimSystem::GetInstance();
+    
     DWORD pid = Core::FindGamePID();
     if (!pid) {
-        Logger::Get().Log("OverlayCore", "ERROR: Target game process not found.");
+        Logger::Get().Log("OverlayCore", "ERROR: No compatible game process found for overlay");
         return;
     }
-    HWND gameHwnd = Core::FindWindowByPID(pid);
-    if (!gameHwnd) {
-        Logger::Get().Log("OverlayCore", "ERROR: Target game window not found.");
+    
+    // Analyze the target game for optimal overlay setup
+    GameProcessInfo gameInfo = gameDetector.AnalyzeProcess(pid);
+    Logger::Get().Log("OverlayCore", "Game Analysis Complete:");
+    Logger::Get().Log("OverlayCore", "  - Engine: " + std::to_string(static_cast<int>(gameInfo.engine)));
+    Logger::Get().Log("OverlayCore", "  - Genre: " + std::to_string(static_cast<int>(gameInfo.genre)));
+    Logger::Get().Log("OverlayCore", "  - Graphics API: " + std::to_string(static_cast<int>(gameInfo.graphicsAPI)));
+    
+    // Initialize universal graphics detection
+    if (!graphicsDetector.Initialize(pid)) {
+        Logger::Get().Log("OverlayCore", "ERROR: Failed to initialize graphics detection");
         return;
     }
-    HWND overlayHwnd = Core::CreateOverlayWindow(gameHwnd);
-    if (!overlayHwnd) {
-        Logger::Get().Log("OverlayCore", "ERROR: Failed to create overlay window.");
+    
+    // Detect and setup graphics API automatically
+    RenderingBackend backend = graphicsDetector.DetectGraphicsAPI();
+    Logger::Get().Log("OverlayCore", "Detected graphics API: " + std::to_string(static_cast<int>(backend)));
+    
+    if (!graphicsDetector.InstallHooks()) {
+        Logger::Get().Log("OverlayCore", "ERROR: Failed to install graphics hooks");
         return;
     }
-    HDC hdc;
-    HGLRC hglrc;
-    if (!Core::InitializeOpenGL(overlayHwnd, hdc, hglrc)) {
-        Logger::Get().Log("OverlayCore", "ERROR: Failed to initialize OpenGL.");
-        DestroyWindow(overlayHwnd);
+    
+    // Initialize universal aim system
+    if (!aimSystem.Initialize(pid)) {
+        Logger::Get().Log("OverlayCore", "WARNING: Failed to initialize aim system - continuing without aim assist");
+    } else {
+        // Adapt aim system to detected game
+        aimSystem.AdaptToGame(gameInfo);
+        Logger::Get().Log("OverlayCore", "Universal aim system initialized and adapted to game");
+    }
+    
+    // Initialize ImGui for the detected graphics API
+    if (!graphicsDetector.InitializeImGui()) {
+        Logger::Get().Log("OverlayCore", "ERROR: Failed to initialize ImGui for detected graphics API");
+        Core::CleanupUniversal(graphicsDetector, aimSystem);
         return;
     }
-    if (!Core::InitializeImGui(overlayHwnd)) {
-        Logger::Get().Log("OverlayCore", "ERROR: Failed to initialize ImGui.");
-        Core::Cleanup(hdc, hglrc, overlayHwnd);
+    
+    // Create universal overlay
+    if (!graphicsDetector.CreateOverlay()) {
+        Logger::Get().Log("OverlayCore", "ERROR: Failed to create universal overlay");
+        Core::CleanupUniversal(graphicsDetector, aimSystem);
         return;
     }
-    IpcPacket packet = {};
-    RECT lastRect = {}, rect;
+    
+    Logger::Get().Log("OverlayCore", "Universal overlay successfully initialized for any game type");
+    
+    // Main rendering loop - works with any graphics API
     while (Main::g_bRunning) {
         MSG msg;
         while (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE)) {
@@ -156,17 +306,32 @@ void Main::MainLoop() {
             DispatchMessageW(&msg);
             if (msg.message == WM_QUIT) Main::g_bRunning = false;
         }
-        if (!IsWindow(gameHwnd)) break;
-        GetWindowRect(gameHwnd, &rect);
-        if (memcmp(&rect, &lastRect, sizeof(RECT)) != 0) {
-            SetWindowPos(overlayHwnd, HWND_TOPMOST, rect.left, rect.top,
-                        rect.right - rect.left, rect.bottom - rect.top, SWP_NOACTIVATE);
-            lastRect = rect;
+        
+        // Update universal systems
+        if (aimSystem.IsActive()) {
+            aimSystem.Update();
         }
-        Core::RenderFrame(rect);
-        SwapBuffers(hdc);
-        Sleep(1);
+        
+        // Update overlay position for target window
+        graphicsDetector.UpdateOverlayPosition();
+        
+        // Render frame using detected graphics API
+        graphicsDetector.BeginFrame();
+        
+        // Universal aim system rendering
+        if (aimSystem.IsActive()) {
+            // This will be handled by the aim system's render callback
+        }
+        
+        // Render universal UI
+        Core::RenderUniversalUI(gameInfo, aimSystem);
+        
+        graphicsDetector.EndFrame();
+        graphicsDetector.RenderFrame();
+        
+        Sleep(1); // Prevent excessive CPU usage
     }
-    Core::Cleanup(hdc, hglrc, overlayHwnd);
-    Logger::Get().Log("OverlayCore", "MainLoop finished.");
+    
+    Core::CleanupUniversal(graphicsDetector, aimSystem);
+    Logger::Get().Log("OverlayCore", "Universal MainLoop finished");
 }
