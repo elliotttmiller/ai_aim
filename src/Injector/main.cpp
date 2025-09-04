@@ -27,6 +27,7 @@
 #include "../Utils/Logger.h"
 #include "../Utils/GameDetection.h"
 #include "../Utils/UniversalConfig.h"
+#include "../Utils/StringConvert.h"
 #include "../Overlay/IPC/SharedMemory.h"
 #include "../IPC/SharedStructs.h"
 
@@ -86,7 +87,7 @@ int UniversalInjector::Run(int argc, char* argv[]) {
     
     m_targetGame = target;
     Logger::Get().Log("Injector", "Target resolved: " + 
-                     std::string(target.processName.begin(), target.processName.end()) +
+                     WStringToString(target.processName) +
                      " (PID: " + std::to_string(target.processId) + ")");
     
     // Select optimal injection method for this target
@@ -129,11 +130,11 @@ bool UniversalInjector::Initialize() {
     m_dllPath = config.GetOverlayDllPath();
     if (!std::filesystem::exists(m_dllPath)) {
         Logger::Get().Log("Injector", "ERROR: Overlay DLL not found: " + 
-                         std::string(m_dllPath.begin(), m_dllPath.end()));
+                         WStringToString(m_dllPath));
         return false;
     }
     
-    Logger::Get().Log("Injector", "Overlay DLL: " + std::string(m_dllPath.begin(), m_dllPath.end()));
+    Logger::Get().Log("Injector", "Overlay DLL: " + WStringToString(m_dllPath));
     
     // Check system capabilities
     bool hasAdminPrivs = config.GetValue<bool>("system.has_admin_privileges", false);
@@ -184,7 +185,7 @@ GameInfo UniversalInjector::ResolveTarget(const std::string& targetHint) {
     if (!allGames.empty()) {
         Logger::Get().Log("Injector", "Multiple targets available, selecting first:");
         for (const auto& game : allGames) {
-            Logger::Get().Log("Injector", "  - " + std::string(game.processName.begin(), game.processName.end()));
+            Logger::Get().Log("Injector", "  - " + WStringToString(game.processName));
         }
         return allGames[0];
     }
@@ -214,7 +215,7 @@ bool UniversalInjector::SelectInjectionMethod(const GameInfo& target) {
             Logger::Get().Log("Injector", "Selected method: Manual DLL injection");
         } else if (!hasAntiCheat) {
             // Use less invasive method
-            m_selectedMethod = UniversalConfig::InjectionMethod::SetWindowsHook;
+            m_selectedMethod = UniversalConfig::InjectionMethod::WindowsHook;
             Logger::Get().Log("Injector", "Selected method: SetWindowsHook");
         } else {
             // Anti-cheat present, use stealthier approach
@@ -244,7 +245,7 @@ bool UniversalInjector::PerformInjection(const GameInfo& target) {
         case UniversalConfig::InjectionMethod::ManualDLL:
             return InjectViaDLLInjection(target.processId, m_dllPath);
             
-        case UniversalConfig::InjectionMethod::SetWindowsHook:
+        case UniversalConfig::InjectionMethod::WindowsHook:
             return InjectViaSetWindowsHook(target.processId, m_dllPath);
             
         case UniversalConfig::InjectionMethod::ProcessHollow:
@@ -444,7 +445,7 @@ bool UniversalInjector::SetupIPC() {
         // Create shared memory (placeholder implementation)
         (void)shmemSize; // Suppress unused variable warning for now
         Logger::Get().Log("Injector", "IPC setup complete");
-        Logger::Get().Log("Injector", "Shared memory: " + std::string(shmemName.begin(), shmemName.end()));
+        Logger::Get().Log("Injector", "Shared memory: " + WStringToString(shmemName));
         return true;
     } catch (const std::exception& e) {
         Logger::Get().Log("Injector", "IPC setup failed: " + std::string(e.what()));

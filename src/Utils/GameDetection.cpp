@@ -1,5 +1,6 @@
 #include "GameDetection.h"
 #include "Logger.h"
+#include "StringConvert.h"
 #include <filesystem>
 #include <algorithm>
 #include <regex>
@@ -53,7 +54,7 @@ std::vector<GameInfo> UniversalGameDetector::DetectAllGames() {
                 if (gameInfo.processId != 0) {
                     detectedGames.push_back(gameInfo);
                     Logger::Get().Log("GameDetector", 
-                        "Detected game: " + std::string(gameInfo.processName.begin(), gameInfo.processName.end()) +
+                        "Detected game: " + WStringToString(gameInfo.processName) +
                         " (Engine: " + std::to_string(static_cast<int>(gameInfo.engine)) + 
                         ", Genre: " + std::to_string(static_cast<int>(gameInfo.genre)) + ")");
                 }
@@ -329,33 +330,48 @@ AntiCheatSystem UniversalGameDetector::DetectAntiCheat(const GameInfo& info) {
 
 bool UniversalGameDetector::IsGameProcess(DWORD processId) {
     // Heuristics to determine if a process is likely a game
-    // This is a simplified implementation - in production this would be more sophisticated
     
+    // 1. Must be a 64-bit process, as our DLL is 64-bit. This is the most important check.
+    if (!Is64BitProcess(processId)) {
+        return false;
+    }
+
     std::wstring processPath = GetProcessPath(processId);
     if (processPath.empty()) return false;
     
     std::wstring lowerPath = processPath;
     std::transform(lowerPath.begin(), lowerPath.end(), lowerPath.begin(), ::towlower);
     
-    // Skip system directories
-    if (lowerPath.find(L"windows\\system32") != std::wstring::npos ||
-        lowerPath.find(L"windows\\syswow64") != std::wstring::npos ||
-        lowerPath.find(L"program files\\windows") != std::wstring::npos) {
-        return false;
+    // 2. Skip processes in system directories more robustly
+    const std::vector<std::wstring> systemPaths = {
+        L"\\windows\\system32\\",
+        L"\\windows\\syswow64\\",
+        L"\\program files\\windows ",
+        L"\\windows\\explorer.exe"
+    };
+    for (const auto& sysPath : systemPaths) {
+        if (lowerPath.find(sysPath) != std::wstring::npos) {
+            return false;
+        }
     }
     
-    // Look for game-like characteristics
+    // 3. Look for game-like characteristics
     std::wstring filename = std::filesystem::path(processPath).filename().wstring();
     std::transform(filename.begin(), filename.end(), filename.begin(), ::towlower);
     
-    // Common game process patterns
+    // Common game process patterns - keep this, but it's less important now
     if (filename.find(L"game") != std::wstring::npos ||
         filename.find(L"launcher") != std::wstring::npos ||
-        filename.find(L"client") != std::wstring::npos ||
-        filename.size() > 20) { // Many games have longer executable names
+        filename.find(L"client") != std::wstring::npos) {
         return true;
     }
     
+    // 4. Check for a visible window as an indicator of a foreground application (like a game)
+    HWND hWnd = FindMainWindow(processId);
+    if (IsWindowVisible(hWnd)) {
+        return true;
+    }
+
     return false;
 }
 
@@ -386,16 +402,45 @@ bool UniversalGameDetector::Is64BitProcess(DWORD processId) {
     (void)processId; // Suppress unused parameter warning for cross-platform build
 #ifdef _WIN32
     HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, processId);
-    if (hProcess) {
-        BOOL isWow64 = FALSE;
-        if (IsWow64Process(hProcess, &isWow64)) {
-            CloseHandle(hProcess);
-            return !isWow64; // If not WoW64, then it's native 64-bit
-        }
-        CloseHandle(hProcess);
+    if (!hProcess) {
+        return false; // Cannot get info, assume not a valid target
     }
+
+    BOOL isWow64 = FALSE;
+    if (IsWow64Process(hProcess, &isWow64)) {
+        CloseHandle(hProcess);
+        // If isWow64 is TRUE, it's a 32-bit process. We want 64-bit, so return FALSE.
+        // If isWow64 is FALSE, it's a 64-bit process. We want 64-bit, so return TRUE.
+        return !isWow64;
+    }
+    
+    CloseHandle(hProcess);
 #endif
-    return true; // Default to 64-bit
+    return false; // Default to false if we can't determine
+}
+
+struct EnumData {
+    DWORD processId;
+    HWND mainWindow;
+};
+
+BOOL CALLBACK EnumWindowsCallback(HWND handle, LPARAM lParam) {
+    EnumData& data = *(EnumData*)lParam;
+    DWORD processId = 0;
+    GetWindowThreadProcessId(handle, &processId);
+    if (data.processId == processId && GetWindow(handle, GW_OWNER) == (HWND)0 && IsWindowVisible(handle)) {
+        data.mainWindow = handle;
+        return FALSE; // Stop enumerating
+    }
+    return TRUE; // Continue enumerating
+}
+
+HWND UniversalGameDetector::FindMainWindow(DWORD processId) {
+    EnumData data;
+    data.processId = processId;
+    data.mainWindow = NULL;
+    EnumWindows(EnumWindowsCallback, (LPARAM)&data);
+    return data.mainWindow;
 }
 
 GameInfo UniversalGameDetector::GetBestInjectionTarget() {

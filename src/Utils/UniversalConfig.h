@@ -46,7 +46,7 @@ public:
     enum class InjectionMethod {
         Automatic,      // Select best method based on target
         ManualDLL,      // CreateRemoteThread + LoadLibrary
-        SetWindowsHook, // SetWindowsHookEx
+        WindowsHook,    // Windows hook based injection (formerly SetWindowsHook)
         ProcessHollow,  // Advanced technique
         ModuleHijack    // DLL hijacking
     };
@@ -94,7 +94,9 @@ public:
 private:
     UniversalConfig() = default;
     ~UniversalConfig() = default;
-    
+    UniversalConfig(const UniversalConfig&) = delete;
+    UniversalConfig& operator=(const UniversalConfig&) = delete;
+
     // Discovery methods
     void DiscoverPaths();
     void DiscoverTargetProcesses();
@@ -122,7 +124,7 @@ private:
     
     // State
     bool m_initialized = false;
-    mutable std::mutex m_mutex;
+    mutable std::recursive_mutex m_mutex;
     
     // Constants for autonomous configuration
     static constexpr const char* CONFIG_FILE_NAME = "ai_aim_config.json";
@@ -134,7 +136,7 @@ private:
 // Template implementations
 template<typename T>
 T UniversalConfig::GetValue(const std::string& key, const T& defaultValue) const {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
     
     auto it = m_config.find(key);
     if (it == m_config.end()) {
@@ -159,7 +161,7 @@ T UniversalConfig::GetValue(const std::string& key, const T& defaultValue) const
 
 template<typename T>
 void UniversalConfig::SetValue(const std::string& key, const T& value) {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
     
     std::string oldValue = m_config[key];
     std::string newValue;

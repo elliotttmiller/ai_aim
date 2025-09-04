@@ -23,8 +23,10 @@
 #include <chrono>
 
 #include "../Utils/Logger.h"
+#include "../Utils/StringConvert.h"
 #include "../Utils/GameDetection.h"
 #include "../Utils/UniversalConfig.h"
+#include "../Utils/StringConvert.h"
 #include "../IPC/SharedStructs.h"
 
 class UniversalLauncher {
@@ -82,7 +84,7 @@ int UniversalLauncher::Run() {
     
     m_currentTarget = target;
     Logger::Get().Log("Launcher", "Selected target: " + 
-                     std::string(target.processName.begin(), target.processName.end()) +
+                     WStringToString(target.processName) +
                      " (PID: " + std::to_string(target.processId) + ")");
     
     // Launch injection process
@@ -124,19 +126,19 @@ bool UniversalLauncher::Initialize() {
     
     if (!std::filesystem::exists(injectorPath)) {
         Logger::Get().Log("Launcher", "ERROR: Injector not found at: " + 
-                         std::string(injectorPath.begin(), injectorPath.end()));
+                         WStringToString(injectorPath));
         return false;
     }
     
     if (!std::filesystem::exists(overlayPath)) {
         Logger::Get().Log("Launcher", "ERROR: Overlay DLL not found at: " + 
-                         std::string(overlayPath.begin(), overlayPath.end()));
+                         WStringToString(overlayPath));
         return false;
     }
     
     Logger::Get().Log("Launcher", "Initialization complete");
-    Logger::Get().Log("Launcher", "Injector: " + std::string(injectorPath.begin(), injectorPath.end()));
-    Logger::Get().Log("Launcher", "Overlay: " + std::string(overlayPath.begin(), overlayPath.end()));
+    Logger::Get().Log("Launcher", "Injector: " + WStringToString(injectorPath));
+    Logger::Get().Log("Launcher", "Overlay: " + WStringToString(overlayPath));
     
     m_initialized = true;
     return true;
@@ -154,7 +156,7 @@ void UniversalLauncher::DisplaySystemInfo() {
     std::string apiList;
     for (const auto& api : supportedAPIs) {
         if (!apiList.empty()) apiList += ", ";
-        apiList += std::string(api.begin(), api.end());
+        apiList += WStringToString(api);
     }
     Logger::Get().Log("Launcher", "Supported Graphics APIs: " + apiList);
     
@@ -179,7 +181,7 @@ GameInfo UniversalLauncher::SelectBestTarget() {
     if (!allGames.empty()) {
         Logger::Get().Log("Launcher", "Available games found:");
         for (const auto& game : allGames) {
-            Logger::Get().Log("Launcher", "  - " + std::string(game.processName.begin(), game.processName.end()) +
+            Logger::Get().Log("Launcher", "  - " + WStringToString(game.processName) +
                              " (Engine: " + std::to_string(static_cast<int>(game.engine)) + 
                              ", Genre: " + std::to_string(static_cast<int>(game.genre)) + ")");
         }
@@ -198,8 +200,8 @@ bool UniversalLauncher::LaunchInjection(const GameInfo& target) {
     std::wstring targetProcess = target.processName;
     
     Logger::Get().Log("Launcher", "Launching injection process...");
-    Logger::Get().Log("Launcher", "Target: " + std::string(targetProcess.begin(), targetProcess.end()));
-    Logger::Get().Log("Launcher", "Injector: " + std::string(injectorPath.begin(), injectorPath.end()));
+    Logger::Get().Log("Launcher", "Target: " + WStringToString(targetProcess));
+    Logger::Get().Log("Launcher", "Injector: " + WStringToString(injectorPath));
     
 #ifdef _WIN32
     // Prepare command line arguments for injector

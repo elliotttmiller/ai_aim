@@ -1,11 +1,17 @@
 #include "UniversalAimAssist.h"
 #include "../../Utils/Logger.h"
 #include "../../Utils/GameDetection.h"
+#include "../../Utils/StringConvert.h"
 #include <algorithm>
 #include <cmath>
 #include <random>
+#include <thread>
+#include <chrono>
 
 #ifdef _WIN32
+    #ifndef NOMINMAX
+        #define NOMINMAX
+    #endif
     #include <Windows.h>
     typedef ULONG_PTR ULONG_PTR_COMPAT;
 #else
@@ -45,7 +51,7 @@ bool UniversalAimAssist::Initialize() {
         AdaptToGameType(bestTarget.genre);
         AdaptToEngine(bestTarget.engine);
         Logger::Get().Log("AimAssist", "Adapted to game: " + 
-                         std::string(bestTarget.processName.begin(), bestTarget.processName.end()));
+                         WStringToString(bestTarget.processName));
     }
     
     // Initialize camera and viewport detection
@@ -108,7 +114,7 @@ void UniversalAimAssist::ScanForTargets() {
     
     // Adaptive scan frequency based on performance
     float scanInterval = m_config.adaptivePerformance ? 
-                        std::max(1.0f / m_config.updateFrequency, m_averageFrameTime / 1000.0f) :
+                        (std::max)(1.0f / m_config.updateFrequency, m_averageFrameTime / 1000.0f) :
                         1.0f / m_config.updateFrequency;
     
     if (timeSinceLastScan < scanInterval) {
@@ -189,13 +195,13 @@ float UniversalAimAssist::CalculateTargetPriority(const Target& target) {
     
     switch (m_config.strategy) {
         case TargetingStrategy::Closest:
-            priority = 1000.0f / std::max(target.distance, 1.0f);
+            priority = 1000.0f / (std::max)(target.distance, 1.0f);
             break;
             
         case TargetingStrategy::LowestHealth:
             // Health-based targeting integration
             // Prioritize targets based on health status when available
-            priority = 100.0f / std::max(target.distance, 1.0f);
+            priority = 100.0f / (std::max)(target.distance, 1.0f);
             break;
             
         case TargetingStrategy::Crosshair: {
@@ -204,7 +210,7 @@ float UniversalAimAssist::CalculateTargetPriority(const Target& target) {
                 powf(target.screenPosition.x - screenCenter.x, 2) + 
                 powf(target.screenPosition.y - screenCenter.y, 2)
             );
-            priority = 1000.0f / std::max(distanceToCenter, 1.0f);
+            priority = 1000.0f / (std::max)(distanceToCenter, 1.0f);
             break;
         }
         
@@ -214,7 +220,7 @@ float UniversalAimAssist::CalculateTargetPriority(const Target& target) {
             
         case TargetingStrategy::Adaptive:
             // Combine multiple factors for intelligent targeting
-            float distanceFactor = 100.0f / std::max(target.distance, 1.0f);
+            float distanceFactor = 100.0f / (std::max)(target.distance, 1.0f);
             float visibilityFactor = target.visible ? 50.0f : 0.0f;
             float threatFactor = CalculateTargetThreat(target);
             priority = distanceFactor + visibilityFactor + threatFactor;
@@ -331,8 +337,8 @@ Vec3 UniversalAimAssist::ApplyHumanization(const Vec3& calculated) {
         static std::mt19937 gen(rd());
         static std::uniform_real_distribution<> dis(-1.0, 1.0);
         
-        humanized.x += dis(gen) * m_config.jitterAmount;
-        humanized.y += dis(gen) * m_config.jitterAmount;
+        humanized.x += static_cast<float>(dis(gen) * m_config.jitterAmount);
+        humanized.y += static_cast<float>(dis(gen) * m_config.jitterAmount);
     }
     
     return humanized;
@@ -495,9 +501,9 @@ void UniversalAimAssist::OptimizeUpdateFrequency() {
     
     // Reduce update frequency if performance is poor
     if (m_averageFrameTime > 25.0f) { // < 40 FPS
-        m_config.updateFrequency = std::max(30, m_config.updateFrequency - 5);
+        m_config.updateFrequency = (std::max)(30, m_config.updateFrequency - 5);
     } else if (m_averageFrameTime < 16.0f) { // > 60 FPS
-        m_config.updateFrequency = std::min(120, m_config.updateFrequency + 5);
+        m_config.updateFrequency = (std::min)(120, m_config.updateFrequency + 5);
     }
 }
 
@@ -514,6 +520,23 @@ float UniversalAimAssist::GetCurrentAccuracy() const {
     }
     
     return validShots > 0 ? totalAccuracy / validShots : 0.0f;
+}
+
+float UniversalAimAssist::GetAverageFrameTime() const {
+    return m_averageFrameTime;
+}
+
+void UniversalAimAssist::SimulateMouseClick() {
+#ifdef _WIN32
+    // Simulate mouse click for trigger bot functionality
+    mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+    std::this_thread::sleep_for(std::chrono::milliseconds(10)); // Brief click duration
+    mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+    
+    Logger::Get().Log("AimAssist", "Mouse click simulated");
+#else
+    Logger::Get().Log("AimAssist", "Mouse click simulation not supported on this platform");
+#endif
 }
 
 // Input simulation implementation

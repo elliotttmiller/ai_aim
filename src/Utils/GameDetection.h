@@ -135,6 +135,7 @@ private:
     std::wstring GetProcessPath(DWORD processId);
     std::wstring GetWindowTitle(DWORD processId);
     bool Is64BitProcess(DWORD processId);
+    HWND FindMainWindow(DWORD processId);
     
     // Monitoring
     bool m_isMonitoring = false;

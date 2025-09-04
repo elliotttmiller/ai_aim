@@ -1,6 +1,7 @@
 #include "UniversalConfig.h"
 #include "GameDetection.h"
 #include "Logger.h"
+#include "StringConvert.h"
 #include <filesystem>
 #include <fstream>
 #include <mutex>
@@ -20,7 +21,7 @@ UniversalConfig& UniversalConfig::GetInstance() {
 }
 
 bool UniversalConfig::Initialize() {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
     
     if (m_initialized) {
         return true;
@@ -66,9 +67,15 @@ bool UniversalConfig::Initialize() {
 }
 
 void UniversalConfig::DiscoverPaths() {
-    // Get executable directory
-    m_executablePath = PathUtils::GetExecutableDirectory();
-    Logger::Get().Log("UniversalConfig", "Executable path: " + std::string(m_executablePath.begin(), m_executablePath.end()));
+    // Get executable directory using Windows API directly
+#ifdef _WIN32
+    wchar_t exePath[MAX_PATH];
+    GetModuleFileNameW(NULL, exePath, MAX_PATH);
+    m_executablePath = std::filesystem::path(exePath).parent_path().wstring();
+#else
+    m_executablePath = std::filesystem::current_path().wstring();
+#endif
+    Logger::Get().Log("UniversalConfig", "Executable path: " + WStringToString(m_executablePath));
     
     // Discover config directory (multiple possible locations)
     std::vector<std::wstring> configCandidates = {
@@ -114,8 +121,8 @@ void UniversalConfig::DiscoverPaths() {
         m_binPath = m_executablePath;
     }
     
-    Logger::Get().Log("UniversalConfig", "Config path: " + std::string(m_configPath.begin(), m_configPath.end()));
-    Logger::Get().Log("UniversalConfig", "Bin path: " + std::string(m_binPath.begin(), m_binPath.end()));
+    Logger::Get().Log("UniversalConfig", "Config path: " + WStringToString(m_configPath));
+    Logger::Get().Log("UniversalConfig", "Bin path: " + WStringToString(m_binPath));
 }
 
 void UniversalConfig::DiscoverTargetProcesses() {
@@ -129,7 +136,7 @@ void UniversalConfig::DiscoverTargetProcesses() {
     for (const auto& game : games) {
         m_discoveredTargets.push_back(game.processName);
         Logger::Get().Log("UniversalConfig", "Discovered target: " + 
-                         std::string(game.processName.begin(), game.processName.end()));
+                         WStringToString(game.processName));
     }
     
     // Add common game process patterns if no specific games found
@@ -183,7 +190,7 @@ void UniversalConfig::DiscoverGraphicsCapabilities() {
 #endif
     
     for (const auto& api : m_supportedAPIs) {
-        Logger::Get().Log("UniversalConfig", "Supported API: " + std::string(api.begin(), api.end()));
+        Logger::Get().Log("UniversalConfig", "Supported API: " + WStringToString(api));
     }
 }
 
@@ -269,7 +276,7 @@ void UniversalConfig::SetupDefaultConfiguration() {
     
     // Graphics Configuration
     if (!m_supportedAPIs.empty()) {
-        SetValue("graphics.preferred_api", std::string(m_supportedAPIs[0].begin(), m_supportedAPIs[0].end()));
+        SetValue("graphics.preferred_api", WStringToString(m_supportedAPIs[0]));
     }
     SetValue("graphics.adaptive_quality", true);
     SetValue("graphics.vsync", false);
@@ -285,7 +292,7 @@ bool UniversalConfig::LoadConfiguration() {
     }
     
     // Convert to narrow string for file operations
-    std::string narrowConfigFile(configFile.begin(), configFile.end());
+    std::string narrowConfigFile = WStringToString(configFile);
     std::ifstream file(narrowConfigFile);
     if (!file.is_open()) {
         Logger::Get().Log("UniversalConfig", "Failed to open configuration file");
@@ -383,7 +390,7 @@ UniversalConfig::InjectionMethod UniversalConfig::GetPreferredInjectionMethod() 
     std::string method = GetValue<std::string>("injection.method", "Automatic");
     
     if (method == "ManualDLL") return InjectionMethod::ManualDLL;
-    if (method == "SetWindowsHook") return InjectionMethod::SetWindowsHook;
+    if (method == "SetWindowsHook") return InjectionMethod::WindowsHook; // accept legacy config value
     if (method == "ProcessHollow") return InjectionMethod::ProcessHollow;
     if (method == "ModuleHijack") return InjectionMethod::ModuleHijack;
     
@@ -411,6 +418,6 @@ std::vector<std::wstring> UniversalConfig::GetSupportedGraphicsAPIs() const {
 }
 
 void UniversalConfig::RegisterCallback(const std::string& key, ConfigUpdateCallback callback) {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
     m_callbacks[key].push_back(callback);
 }

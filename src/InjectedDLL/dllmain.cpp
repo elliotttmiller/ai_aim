@@ -33,7 +33,7 @@ DWORD WINAPI MainThread(HMODULE hModule);
 
 void* MainThreadWrapper(void* param) {
     HMODULE hModule = static_cast<HMODULE>(param);
-    return reinterpret_cast<void*>(MainThread(hModule));
+    return reinterpret_cast<void*>(static_cast<uintptr_t>(MainThread(hModule)));
 }
 
 DWORD WINAPI MainThread(HMODULE hModule) {
@@ -47,7 +47,6 @@ DWORD WINAPI MainThread(HMODULE hModule) {
         if (!config.Initialize()) {
             Logger::Get().Log("InjectedDLL", "ERROR: Failed to initialize configuration system");
             FreeLibraryAndExitThread(hModule, 1);
-            return 1;
         }
 
         // Initialize memory scanner for target detection
@@ -55,7 +54,6 @@ DWORD WINAPI MainThread(HMODULE hModule) {
         if (!scanner.Initialize()) {
             Logger::Get().Log("InjectedDLL", "ERROR: Failed to initialize memory scanner");
             FreeLibraryAndExitThread(hModule, 1);
-            return 1;
         }
 
         // Initialize universal aim assist system
@@ -63,7 +61,6 @@ DWORD WINAPI MainThread(HMODULE hModule) {
         if (!aimAssist.Initialize()) {
             Logger::Get().Log("InjectedDLL", "ERROR: Failed to initialize aim assist system");
             FreeLibraryAndExitThread(hModule, 1);
-            return 1;
         }
 
         Logger::Get().Log("InjectedDLL", "All systems initialized successfully");
@@ -109,7 +106,6 @@ DWORD WINAPI MainThread(HMODULE hModule) {
 
     Logger::Get().Log("InjectedDLL", "Overlay shutdown complete. Detaching from process.");
     FreeLibraryAndExitThread(hModule, 0);
-    return 0; // This line won't be reached but satisfies compiler
 }
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID) {
