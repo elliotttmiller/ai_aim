@@ -12,7 +12,12 @@
     // Cross-platform types for development
     typedef unsigned long DWORD;
     typedef void* HANDLE;
+    typedef void* HWND;
+    typedef long LPARAM;
+    typedef int BOOL;
     #define INVALID_HANDLE_VALUE ((HANDLE)-1)
+    #define TRUE 1
+    #define FALSE 0
 #endif
 
 /**
