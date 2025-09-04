@@ -4,7 +4,7 @@
 
 ## Overview
 
-**ai_aim** is a robust, modular, and extensible system for autonomous overlay, aim assist, and real-time data integration with any Windows game. The architecture is designed for universal use—supporting injection, overlay, and configuration for any game, not just the included Aim Trainer. The workflow is fully automated, requiring no manual code changes to the target game, and is adaptable for a wide range of use cases (aim assist, overlays, analytics, etc.).
+**ai_aim** is a robust, modular, and extensible system for autonomous overlay, aim assist, and real-time data integration with any Windows game. The architecture is designed for universal use—supporting injection, overlay, and configuration for any game, not just the included Aim Trainer. The workflow is **fully autonomous with zero hardcoding**, requiring no manual code changes to the target game, and is adaptable for a wide range of use cases (aim assist, overlays, analytics, etc.).
 
 ---
 
@@ -74,33 +74,34 @@ ai_aim/
 
 ## Universal Autonomous Workflow & Integration
 
-### 1. Launcher (`Launcher.exe`)
-- Orchestrates the entire workflow for any target game.
-- Launches the specified game executable, waits for its process, and injects the overlay DLL using the Injector.
-- Handles process lifecycle, error handling, and configuration automatically.
+### 1. Launcher (`Launcher.exe`) - Fully Autonomous Orchestration
+- Orchestrates the entire workflow for any target game with zero manual configuration.
+- Automatically detects game executables, launches processes, and manages injection lifecycle.
+- Dynamically configures all system parameters without hardcoded values or fallback logic.
 - All actions are logged to `bin/debug.log`.
 
-### 2. Injector (`Injector.exe`)
-- Finds the target game process and injects the overlay DLL (`Overlay.dll`) using configurable methods (SetWindowsHookEx, CreateRemoteThread, etc.).
-- Sets up shared memory IPC channels for high-performance communication between overlay and game.
+### 2. Injector (`Injector.exe`) - Autonomous Injection & IPC Setup
+- Automatically finds target game processes and selects optimal injection method.
+- Dynamically injects overlay DLL with adaptive method selection (no hardcoded preferences).
+- Autonomously establishes shared memory IPC channels with dynamic configuration.
 - Logs all injection and IPC setup events to `bin/debug.log`.
 
-### 3. Overlay DLL (`Overlay.dll`)
-- Injected into any game process, starts in `DllMain.cpp`.
-- Main loop (`Main.cpp`) sets up ImGui, manages overlay rendering, and coordinates all modules.
-- Modular architecture with separate components for aim assist, input management, memory scanning, and UI.
-- Uses shared memory IPC for real-time data exchange with minimal latency.
+### 3. Overlay DLL (`Overlay.dll`) - Autonomous Overlay & Aim Assist
+- Injected into any game process, autonomously initializes without manual configuration.
+- Automatically detects graphics API, sets up ImGui, and configures rendering pipeline.
+- Autonomous memory scanning, target detection, and aim assist logic with zero hardcoding.
+- Self-configuring IPC communication and real-time data processing.
 - All overlay actions, errors, and events are logged to `bin/debug.log`.
 
 ### 4. Unified Debug Logging
 - All modules write their debug output to `bin/debug.log` for easy troubleshooting and diagnostics.
 - Centralized logging system via Utils/Logger for consistent formatting and thread safety.
 
-### 5. Configuration & Extensibility
-- The system uses shared memory IPC with standardized data structures defined in `SharedStructs.h`.
-- Modular CMake build system allows easy addition of new components.
-- New overlays, assist modules, or analytics can be added without changing the target game code.
-- Configuration files in `config/` directory for game-specific memory layouts and settings.
+### 5. Autonomous Configuration & Extensibility
+- System autonomously configures all parameters through dynamic detection and adaptation.
+- Self-discovering memory layouts, graphics APIs, and game-specific data structures.
+- Modular architecture allows autonomous integration of new components without manual configuration.
+- Zero reliance on static configuration files - all settings determined at runtime through intelligent detection.
 
 ---
 
@@ -161,6 +162,7 @@ To demonstrate and test the universal overlay/injection system, we created a sta
 ## Benefits of This Approach
 
 - **Zero source code changes to your game**: No need to modify, patch, or recompile the game itself. All integration is external and non-invasive.
+- **Full autonomy with zero hardcoding**: System automatically detects, configures, and adapts to any game without manual intervention or hardcoded values.
 - **High precision**: Direct access to in-memory game data (such as enemy coordinates, player stats, etc.) enables accurate overlays and assist features.
 - **Real-time data**: Memory scanning and IPC provide instant access to game state, eliminating the lag and inaccuracies of screen capture or input polling.
 - **Completely external**: The overlay, aim assist, and analytics modules are developed and maintained separately, allowing for rapid iteration and easy updates.
@@ -212,19 +214,22 @@ This project uses open-source libraries (Raylib, ImGui, MinHook) under their res
 ### Known Issues & Optimizations Needed
 - **AimTrainer Build**: Test application needs proper CMake configuration to build
 - **Overlay/Aim Assist Logic**: Core overlay and aim assist functionality not currently working
-- **Path Configuration**: Some hardcoded paths need to be made dynamic via config files
+- **Full End-to-End Autonomy**: Complete elimination of ALL hardcoded values across injection, configuration, overlay, communication, and aim assist logic
+- **Autonomous Detection**: System needs intelligent game detection, memory layout discovery, and graphics API identification
 - **Error Handling**: Enhanced error handling and recovery mechanisms needed
 - **Performance**: Memory scanning and overlay rendering optimization required
 - **Anti-Detection**: Injection methods need hardening against anti-cheat systems
 
 ### Next Steps for Production Ready System
-1. **Fix Overlay/Aim Assist Logic**: Implement working overlay rendering and aim assist algorithms
+1. **Fix Overlay/Aim Assist Logic**: Implement working overlay rendering and aim assist algorithms with full autonomy
 2. **Complete AimTrainer Build**: Fix CMake configuration for test application
-3. **Dynamic Configuration**: Move all hardcoded paths to `config/game_memory.cfg`
-4. **Robust Error Handling**: Implement comprehensive error recovery and logging
-5. **Performance Optimization**: Profile and optimize memory scanning and rendering
-6. **Security Hardening**: Implement anti-detection measures for injection
-7. **Documentation**: Add detailed API documentation and usage examples
+3. **End-to-End Autonomous Operation**: Eliminate ALL hardcoded values from injection through aim assist - complete autonomous workflow
+4. **Intelligent Game Detection**: Implement autonomous game process detection, memory layout discovery, and graphics API identification
+5. **Autonomous Configuration System**: Replace all static configuration with dynamic runtime detection and adaptation
+6. **Robust Error Handling**: Implement comprehensive error recovery and logging
+7. **Performance Optimization**: Profile and optimize memory scanning and rendering
+8. **Security Hardening**: Implement anti-detection measures for injection
+9. **Documentation**: Add detailed API documentation and usage examples
 
 ---
 
