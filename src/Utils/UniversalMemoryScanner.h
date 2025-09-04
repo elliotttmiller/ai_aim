@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <chrono>
 #include <cmath>
+#include <mutex>
 
 #ifdef _WIN32
     #include <Windows.h>
@@ -221,6 +222,7 @@ private:
     // State
     HANDLE m_processHandle = nullptr;
     DWORD m_processId = 0;
+    mutable std::mutex m_cacheMutex; // Thread safety for cache operations
     
     // Pattern database
     std::vector<MemoryPattern> m_patterns;

@@ -496,7 +496,7 @@ bool UniversalMemoryScanner::IsCacheValid(const MemoryAddress& address) {
 void UniversalMemoryScanner::ClearCache() {
     m_cache.clear();
     m_cacheTimestamps.clear();
-    Logger::Get().Log("MemoryScanner", "Cache cleared");
+    Logger::Get().Log("MemoryScanner", "Memory cache cleared");
 }
 
 void UniversalMemoryScanner::Update() {
@@ -551,4 +551,51 @@ namespace MemoryUtils {
     bool IsValidAddress(uintptr_t address) {
         return address > 0x1000 && address < 0x7FFFFFFF; // Basic range check
     }
+}
+
+// ============================================================================
+// Performance Optimization Extensions
+// ============================================================================
+
+void UniversalMemoryScanner::OptimizeForEngine(const std::string& engineName) {
+    Logger::Get().Log("MemoryScanner", "Optimizing memory scanner for engine: " + engineName);
+    
+    // Engine-specific performance optimizations
+    if (engineName == "Unreal" || engineName == "UE4" || engineName == "UE5") {
+        m_maxScanSize = 1024 * 1024 * 200; // 200MB for Unreal games
+        m_scanIntervalMs = 50; // Higher frequency for fast-paced games
+    } else if (engineName == "Unity" || engineName == "Unity3D") {
+        m_maxScanSize = 1024 * 1024 * 150; // 150MB for Unity games
+        m_scanIntervalMs = 75; // Moderate frequency
+    } else if (engineName == "Source" || engineName == "Source2") {
+        m_maxScanSize = 1024 * 1024 * 100; // 100MB for Source games
+        m_scanIntervalMs = 60; // Good balance for Source
+    } else if (engineName == "CryEngine" || engineName == "CRYENGINE") {
+        m_maxScanSize = 1024 * 1024 * 300; // 300MB for CryEngine
+        m_scanIntervalMs = 80; // Lower frequency due to complexity
+    } else {
+        // Generic optimization
+        m_maxScanSize = 1024 * 1024 * 150; // 150MB default
+        m_scanIntervalMs = 100; // Conservative frequency
+    }
+    
+    // Enable optimized scanning patterns
+    m_optimizedScanning = true;
+    
+    Logger::Get().Log("MemoryScanner", "Set max scan size: " + std::to_string(m_maxScanSize / (1024*1024)) + "MB");
+    Logger::Get().Log("MemoryScanner", "Set scan interval: " + std::to_string(m_scanIntervalMs) + "ms");
+}
+
+std::vector<std::string> UniversalMemoryScanner::GetScanStatistics() const {
+    std::vector<std::string> stats;
+    
+    stats.push_back("Total Scans: " + std::to_string(m_totalScans));
+    stats.push_back("Cache Hits: " + std::to_string(m_cacheHits));
+    stats.push_back("Cache Hit Rate: " + std::to_string(GetCacheHitRate()) + "%");
+    stats.push_back("Cached Addresses: " + std::to_string(m_cache.size()));
+    stats.push_back("Max Scan Size: " + std::to_string(m_maxScanSize / (1024*1024)) + "MB");
+    stats.push_back("Scan Interval: " + std::to_string(m_scanIntervalMs) + "ms");
+    stats.push_back("Optimized Scanning: " + std::string(m_optimizedScanning ? "Enabled" : "Disabled"));
+    
+    return stats;
 }

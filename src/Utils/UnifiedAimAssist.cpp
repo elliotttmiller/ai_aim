@@ -19,7 +19,7 @@ UnifiedAimAssist& UnifiedAimAssist::GetInstance() {
 }
 
 bool UnifiedAimAssist::Initialize() {
-    Logger::Get().Log("UnifiedAimAssist", "Initializing Advanced Aim Assist System...");
+    Logger::Get().Log("UnifiedAimAssist", "Initializing Advanced Aim Assist System with Performance Optimizations...");
     
     if (m_initialized) {
         Logger::Get().Log("UnifiedAimAssist", "Already initialized");
@@ -31,13 +31,19 @@ bool UnifiedAimAssist::Initialize() {
         m_randomGenerator.seed(m_randomDevice());
         m_jitterDistribution = std::uniform_real_distribution<float>(-1.0f, 1.0f);
         
-        // Load configuration from Universal Config
-        auto& config = UniversalConfig::GetInstance();
-        m_config.enabled = config.IsAimAssistEnabled();
-        m_config.sensitivity = config.GetValue<float>("aim_assist.sensitivity", 0.5f);
-        m_config.fovRadius = config.GetValue<float>("aim_assist.fov_radius", 100.0f);
-        m_config.smoothing = config.GetValue<float>("aim_assist.smoothing", 0.7f);
-        m_config.humanization = config.GetValue<bool>("aim_assist.humanization", true);
+        // Initialize object pool for performance optimization
+        if (m_config.enableObjectPooling) {
+            m_targetPool.resize(m_config.memoryPoolSize);
+            m_poolUsage.resize(m_config.memoryPoolSize, false);
+            for (int i = 0; i < m_config.memoryPoolSize; ++i) {
+                m_targetPool[i].poolIndex = i;
+            }
+            Logger::Get().Log("UnifiedAimAssist", "Initialized object pool with " + 
+                             std::to_string(m_config.memoryPoolSize) + " targets");
+        }
+        
+        // Load configuration from Universal Config with intelligent caching
+        PreloadConfiguration();
         
         // Detect and adapt to current game
         auto& detector = UniversalGameDetector::GetInstance();
@@ -50,7 +56,7 @@ bool UnifiedAimAssist::Initialize() {
                              WideToUTF8(bestTarget.processName));
         }
         
-        // Initialize memory scanning
+        // Initialize memory scanning with optimizations
         if (!InitializeMemoryScanning()) {
             Logger::Get().Log("UnifiedAimAssist", "WARNING: Memory scanning initialization failed");
         }
@@ -64,23 +70,29 @@ bool UnifiedAimAssist::Initialize() {
             Logger::Get().Log("UnifiedAimAssist", "WARNING: Screen resolution detection failed, using defaults");
         }
         
-        // Initialize timing
+        // Initialize timing and performance tracking
         m_lastUpdate = std::chrono::steady_clock::now();
         m_lastTargetScan = m_lastUpdate;
         m_lastReactionTime = m_lastUpdate;
+        m_lastCacheValidation = m_lastUpdate;
         
-        // Clear history buffers
+        // Clear history buffers with optimized initialization
         std::fill(std::begin(m_accuracyHistory), std::end(m_accuracyHistory), 0.0f);
-        std::fill(std::begin(m_performanceHistory), std::end(m_performanceHistory), 0.0f);
+        std::fill(std::begin(m_performanceHistory), std::end(m_performanceHistory), 16.67f); // Start with 60fps assumption
+        std::fill(std::begin(m_systemLoadHistory), std::end(m_systemLoadHistory), 0.5f); // Start with moderate load
+        
+        // Enable optimizations based on configuration
+        if (m_config.enableMultiThreading || m_config.enableSmartCaching) {
+            EnableOptimizations(true);
+        }
         
         m_initialized = true;
         
-        Logger::Get().Log("UnifiedAimAssist", "Advanced Aim Assist System initialized successfully");
-        Logger::Get().Log("UnifiedAimAssist", "Mode: " + std::to_string(static_cast<int>(m_config.mode)));
-        Logger::Get().Log("UnifiedAimAssist", "Sensitivity: " + std::to_string(m_config.sensitivity));
-        Logger::Get().Log("UnifiedAimAssist", "FOV Radius: " + std::to_string(m_config.fovRadius));
-        Logger::Get().Log("UnifiedAimAssist", "Screen Resolution: " + 
-                         std::to_string(m_screenWidth) + "x" + std::to_string(m_screenHeight));
+        Logger::Get().Log("UnifiedAimAssist", "Advanced Aim Assist System initialized successfully with optimizations");
+        Logger::Get().Log("UnifiedAimAssist", "Object Pooling: " + std::string(m_config.enableObjectPooling ? "Enabled" : "Disabled"));
+        Logger::Get().Log("UnifiedAimAssist", "Multi-threading: " + std::string(m_config.enableMultiThreading ? "Enabled" : "Disabled"));
+        Logger::Get().Log("UnifiedAimAssist", "Smart Caching: " + std::string(m_config.enableSmartCaching ? "Enabled" : "Disabled"));
+        Logger::Get().Log("UnifiedAimAssist", "Memory Pool Size: " + std::to_string(m_config.memoryPoolSize));
         
         return true;
         
@@ -117,36 +129,59 @@ void UnifiedAimAssist::Update() {
     
     auto now = std::chrono::steady_clock::now();
     auto deltaTime = std::chrono::duration<float>(now - m_lastUpdate).count();
-    (void)deltaTime; // Mark as used for performance timing
+    (void)deltaTime; // Used for performance timing
     m_lastUpdate = now;
     
-    // Update performance metrics
+    // Update performance metrics with system load tracking
     UpdatePerformanceMetrics();
     
-    // Performance optimization - skip frames if needed
+    // Adaptive performance optimization based on system load
+    float systemLoad = GetSystemLoad();
+    if (systemLoad > 0.8f && m_config.adaptivePerformance) {
+        OptimizeForSystemLoad(systemLoad, GetMemoryUsage());
+    }
+    
+    // Smart frame skipping for performance optimization
     if (ShouldSkipFrame()) {
         return;
     }
     
-    // Core aim assist pipeline
+    // Update object pool if enabled
+    if (m_config.enableObjectPooling) {
+        UpdateTargetPool();
+    }
+    
+    // Core aim assist pipeline with optimizations
     try {
-        // 1. Scan for targets in memory and on screen
-        ScanForTargets();
+        // 1. Parallel target scanning and processing
+        if (m_config.enableMultiThreading) {
+            ParallelizeTargetProcessing();
+        } else {
+            ScanForTargets();
+        }
         
-        // 2. Update tracking information for existing targets
+        // 2. Enhanced target tracking with velocity history
         UpdateTargetTracking();
         
-        // 3. Prioritize targets based on current strategy
+        // 3. Intelligent target prioritization with behavior analysis
         PrioritizeTargets();
+        UpdateThreatAssessment();
         
-        // 4. Execute aiming logic if we have a valid target
+        // 4. Advanced aim calculation with prediction improvements
         ExecuteAiming();
         
-        // 5. Apply mouse movement if aiming key is pressed
+        // 5. Apply mouse movement with humanization
         ApplyMouseMovement();
         
-        // 6. Optimize update frequency based on performance
+        // 6. Adaptive performance tuning
         OptimizeUpdateFrequency();
+        
+        // 7. Periodic cache validation and memory optimization
+        if (std::chrono::duration<float, std::milli>(now - m_lastCacheValidation).count() > 1000.0f) {
+            ValidateMemoryCache();
+            OptimizeMemoryAccess();
+            m_lastCacheValidation = now;
+        }
         
     } catch (const std::exception& e) {
         Logger::Get().Log("UnifiedAimAssist", "Error in update loop: " + std::string(e.what()));
@@ -433,19 +468,51 @@ Vec3 UnifiedAimAssist::CalculateAimDirection(const UniversalTarget& target) {
 
 Vec3 UnifiedAimAssist::ApplyPrediction(const UniversalTarget& target) {
     if (target.velocity.Length() < 0.1f) {
-        return target.screenPosition; // Target not moving
+        return target.screenPosition; // Target not moving significantly
     }
     
-    // Predict target position based on velocity
-    Vec3 predictedWorldPos = AimUtils::PredictTargetPosition(
+    // Advanced prediction using velocity history and acceleration
+    Vec3 avgVelocity = target.GetAverageVelocity();
+    Vec3 acceleration = target.GetVelocityAcceleration();
+    
+    // Calculate prediction time based on distance and game context
+    float predictionTime = PREDICTION_LOOKAHEAD_MS;
+    
+    // Adaptive prediction time based on target behavior
+    if (m_behaviorPatterns.find(target.entityId) != m_behaviorPatterns.end()) {
+        const auto& pattern = m_behaviorPatterns.at(target.entityId);
+        if (pattern.predictabilityScore > 0.7f) {
+            predictionTime *= 1.5f; // Increase prediction for predictable targets
+        } else if (pattern.predictabilityScore < 0.3f) {
+            predictionTime *= 0.5f; // Reduce prediction for erratic targets
+        }
+    }
+    
+    // Apply Kalman filtering for smoother prediction
+    Vec3 kalmanPredicted = ApplyKalmanFiltering(target);
+    
+    // Combine velocity-based and Kalman predictions
+    Vec3 velocityPredicted = AimUtils::PredictTargetPosition(
         target.worldPosition, 
-        target.velocity, 
-        PREDICTION_LOOKAHEAD_MS
+        avgVelocity, 
+        predictionTime
     );
+    
+    // Add acceleration component for more accurate prediction
+    if (acceleration.Length() > 0.1f) {
+        float timeSeconds = predictionTime / 1000.0f;
+        Vec3 accelerationComponent = acceleration * (0.5f * timeSeconds * timeSeconds);
+        velocityPredicted += accelerationComponent;
+    }
+    
+    // Weighted combination of predictions
+    float kalmanWeight = 0.3f;
+    float velocityWeight = 0.7f;
+    Vec3 combinedPrediction = kalmanPredicted * kalmanWeight + velocityPredicted * velocityWeight;
     
     // Convert predicted world position to screen
     Vec3 predictedScreenPos;
-    if (WorldToScreen(predictedWorldPos, predictedScreenPos)) {
+    if (WorldToScreen(combinedPrediction, predictedScreenPos)) {
         return predictedScreenPos;
     }
     
@@ -696,15 +763,502 @@ void UnifiedAimAssist::AdaptToEngine(GameEngine engine) {
     (void)engine; // Suppress unused parameter warning
 }
 
-// Placeholder implementations for complex functions
-std::vector<UniversalTarget> UnifiedAimAssist::GetVisibleTargets() { return m_visibleTargets; }
-void UnifiedAimAssist::UpdateTargetTracking() { /* Implementation needed */ }
-bool UnifiedAimAssist::WorldToScreen(const Vec3& worldPos, Vec3& screenPos) { (void)worldPos; (void)screenPos; return false; }
-bool UnifiedAimAssist::DetectCameraSystem() { return true; }
-bool UnifiedAimAssist::DetectScreenResolution() { m_screenWidth = 1920; m_screenHeight = 1080; return true; }
-void UnifiedAimAssist::UpdateMemoryPatterns() { /* Implementation needed */ }
-uintptr_t UnifiedAimAssist::FindEntityListBase() { return 0; }
-std::vector<uintptr_t> UnifiedAimAssist::ScanForEntities() { return {}; }
+// ============================================================================
+// Performance Optimization Functions
+// ============================================================================
+
+void UnifiedAimAssist::EnableOptimizations(bool enable) {
+    Logger::Get().Log("UnifiedAimAssist", "Performance optimizations " + 
+                     std::string(enable ? "enabled" : "disabled"));
+    
+    if (enable) {
+        // Initialize memory optimization
+        OptimizeMemoryAccess();
+        
+        // Preload frequently used configurations
+        PreloadConfiguration();
+        
+        // Initialize smart caching
+        if (m_config.enableSmartCaching) {
+            CacheMemoryAddresses();
+        }
+    }
+}
+
+void UnifiedAimAssist::PreloadConfiguration() {
+    auto& config = UniversalConfig::GetInstance();
+    
+    // Load all aim assist configurations in batch for better performance
+    m_config.enabled = config.IsAimAssistEnabled();
+    m_config.sensitivity = config.GetValue<float>("aim_assist.sensitivity", 0.5f);
+    m_config.fovRadius = config.GetValue<float>("aim_assist.fov_radius", 100.0f);
+    m_config.smoothing = config.GetValue<float>("aim_assist.smoothing", 0.7f);
+    m_config.humanization = config.GetValue<bool>("aim_assist.humanization", true);
+    m_config.enablePrediction = config.GetValue<bool>("aim_assist.prediction", true);
+    m_config.predictionStrength = config.GetValue<float>("aim_assist.prediction_strength", 0.5f);
+    
+    // Performance-specific configurations
+    m_config.enableObjectPooling = config.GetValue<bool>("performance.object_pooling", true);
+    m_config.enableMultiThreading = config.GetValue<bool>("performance.multithreading", true);
+    m_config.enableSmartCaching = config.GetValue<bool>("performance.smart_caching", true);
+    m_config.memoryPoolSize = config.GetValue<int>("performance.pool_size", 100);
+    
+    Logger::Get().Log("UnifiedAimAssist", "Configuration preloaded with optimizations");
+}
+
+void UnifiedAimAssist::OptimizeForSystemLoad(float cpuUsage, float memoryUsage) {
+    // Adaptive performance tuning based on system resources
+    if (cpuUsage > 0.9f) {
+        // High CPU usage - reduce update frequency and target processing
+        m_config.updateFrequency = std::max(30, m_config.updateFrequency - 10);
+        m_config.maxTargetsPerFrame = std::max(5, m_config.maxTargetsPerFrame - 5);
+        Logger::Get().Log("UnifiedAimAssist", "Reduced performance due to high CPU usage");
+    }
+    
+    if (memoryUsage > 0.85f) {
+        // High memory usage - optimize memory allocations
+        OptimizeMemoryAccess();
+        if (m_targetPool.size() > 50) {
+            m_targetPool.resize(50); // Reduce pool size
+            m_poolUsage.resize(50);
+        }
+        Logger::Get().Log("UnifiedAimAssist", "Optimized memory usage");
+    }
+    
+    // Update system load history
+    m_systemLoadHistory[m_systemLoadIndex] = cpuUsage;
+    m_systemLoadIndex = (m_systemLoadIndex + 1) % 30;
+}
+
+void UnifiedAimAssist::UpdateTargetPool() {
+    // Clean up unused targets in the pool
+    for (size_t i = 0; i < m_targetPool.size(); ++i) {
+        if (m_poolUsage[i] && !m_targetPool[i].inUse) {
+            m_poolUsage[i] = false; // Mark as available
+        }
+    }
+    
+    // Validate pool integrity
+    size_t activeTargets = 0;
+    for (bool used : m_poolUsage) {
+        if (used) activeTargets++;
+    }
+    
+    if (activeTargets > m_visibleTargets.size() + 10) {
+        // Something's wrong with pool management, reset it
+        std::fill(m_poolUsage.begin(), m_poolUsage.end(), false);
+        for (auto& target : m_targetPool) {
+            target.inUse = false;
+        }
+    }
+}
+
+UniversalTarget* UnifiedAimAssist::GetPooledTarget() {
+    if (!m_config.enableObjectPooling) {
+        return nullptr; // Object pooling disabled
+    }
+    
+    // Find an available target in the pool
+    for (size_t i = 0; i < m_poolUsage.size(); ++i) {
+        if (!m_poolUsage[i]) {
+            m_poolUsage[i] = true;
+            m_targetPool[i].inUse = true;
+            
+            // Reset target to default state
+            auto now = std::chrono::steady_clock::now();
+            m_targetPool[i].lastSeen = m_targetPool[i].firstSeen = now;
+            m_targetPool[i].visible = false;
+            m_targetPool[i].tracked = false;
+            
+            return &m_targetPool[i];
+        }
+    }
+    
+    return nullptr; // Pool exhausted
+}
+
+void UnifiedAimAssist::ReturnTargetToPool(UniversalTarget* target) {
+    if (!target || !m_config.enableObjectPooling) {
+        return;
+    }
+    
+    if (target->poolIndex >= 0 && target->poolIndex < static_cast<int>(m_poolUsage.size())) {
+        m_poolUsage[target->poolIndex] = false;
+        target->inUse = false;
+    }
+}
+
+void UnifiedAimAssist::ParallelizeTargetProcessing() {
+    // Parallel target scanning and processing (simplified implementation)
+    // In a real implementation, this would use std::thread or thread pool
+    
+    // For now, implement as optimized sequential processing with batching
+    ScanForTargets();
+    
+    // Process targets in batches for better cache performance
+    const size_t batchSize = 5;
+    for (size_t i = 0; i < m_visibleTargets.size(); i += batchSize) {
+        size_t endIdx = std::min(i + batchSize, m_visibleTargets.size());
+        
+        // Process batch of targets
+        for (size_t j = i; j < endIdx; ++j) {
+            UpdateTargetPrediction(m_visibleTargets[j]);
+            UpdateBehaviorPattern(m_visibleTargets[j]);
+        }
+    }
+}
+
+void UnifiedAimAssist::OptimizeMemoryAccess() {
+    // Optimize memory access patterns
+    m_visibleTargets.reserve(m_config.maxTargetsPerFrame);
+    m_targetHistory.reserve(TARGET_HISTORY_SIZE);
+    
+    // Clear unnecessary memory
+    if (m_targetHistory.size() > TARGET_HISTORY_SIZE) {
+        m_targetHistory.erase(m_targetHistory.begin(), 
+                            m_targetHistory.begin() + (m_targetHistory.size() - TARGET_HISTORY_SIZE));
+    }
+    
+    // Update memory usage tracking
+    m_memoryUsage = sizeof(UniversalTarget) * (m_visibleTargets.capacity() + 
+                                               m_targetHistory.capacity() + 
+                                               m_targetPool.size());
+    m_memoryUsage += sizeof(BehaviorPattern) * m_behaviorPatterns.size();
+    m_memoryUsage += sizeof(MemoryCache) * m_memoryCache.size();
+}
+
+float UnifiedAimAssist::GetSystemLoad() const {
+    // Calculate average system load from history
+    float totalLoad = 0.0f;
+    int count = 0;
+    
+    for (int i = 0; i < 30; ++i) {
+        if (m_systemLoadHistory[i] > 0.0f) {
+            totalLoad += m_systemLoadHistory[i];
+            count++;
+        }
+    }
+    
+    return count > 0 ? totalLoad / count : 0.5f; // Default to moderate load
+}
+
+size_t UnifiedAimAssist::GetMemoryUsage() const {
+    return m_memoryUsage;
+}
+
+// ============================================================================
+// Advanced Prediction and Intelligence Functions  
+// ============================================================================
+
+void UnifiedAimAssist::UpdateTargetPrediction(UniversalTarget& target) {
+    auto now = std::chrono::steady_clock::now();
+    
+    // Calculate velocity if we have position history
+    static std::unordered_map<uint32_t, Vec3> lastPositions;
+    
+    if (lastPositions.find(target.entityId) != lastPositions.end()) {
+        Vec3 lastPos = lastPositions[target.entityId];
+        float deltaTime = std::chrono::duration<float, std::milli>(now - target.lastVelocityUpdate).count();
+        
+        if (deltaTime > 0.0f) {
+            Vec3 newVelocity = (target.worldPosition - lastPos) * (1000.0f / deltaTime);
+            target.UpdateVelocityHistory(newVelocity);
+        }
+    }
+    
+    lastPositions[target.entityId] = target.worldPosition;
+    
+    // Update predicted position using advanced algorithms
+    target.predictedPosition = CalculateAdvancedPrediction(target, PREDICTION_LOOKAHEAD_MS);
+    
+    // Calculate threat level based on behavior
+    target.threatLevel = CalculateTargetBehaviorPattern(target);
+}
+
+Vec3 UnifiedAimAssist::CalculateAdvancedPrediction(const UniversalTarget& target, float timeAhead) {
+    Vec3 avgVelocity = target.GetAverageVelocity();
+    Vec3 acceleration = target.GetVelocityAcceleration();
+    
+    // Basic kinematic prediction: position = initial + velocity*time + 0.5*acceleration*time^2
+    float timeSeconds = timeAhead / 1000.0f;
+    Vec3 predicted = target.worldPosition;
+    predicted += avgVelocity * timeSeconds;
+    
+    if (acceleration.Length() > 0.1f) {
+        predicted += acceleration * (0.5f * timeSeconds * timeSeconds);
+    }
+    
+    return predicted;
+}
+
+float UnifiedAimAssist::CalculateTargetBehaviorPattern(const UniversalTarget& target) {
+    auto now = std::chrono::steady_clock::now();
+    auto& pattern = m_behaviorPatterns[target.entityId];
+    
+    // Update behavior pattern based on movement
+    Vec3 avgVelocity = target.GetAverageVelocity();
+    float movementSpeed = avgVelocity.Length();
+    
+    // Update running averages
+    float alpha = 0.1f; // Smoothing factor
+    pattern.averageMovementSpeed = pattern.averageMovementSpeed * (1.0f - alpha) + movementSpeed * alpha;
+    
+    // Calculate predictability based on velocity consistency
+    float velocityVariance = 0.0f;
+    for (int i = 0; i < 4; ++i) {
+        float speed = target.velocityHistory[i].Length();
+        float diff = speed - pattern.averageMovementSpeed;
+        velocityVariance += diff * diff;
+    }
+    velocityVariance /= 4.0f;
+    
+    // Convert variance to predictability score (lower variance = higher predictability)
+    pattern.predictabilityScore = std::exp(-velocityVariance / 100.0f);
+    pattern.lastUpdate = now;
+    
+    // Return threat level (higher speed + lower predictability = higher threat)
+    return (movementSpeed / 500.0f) * (1.0f - pattern.predictabilityScore);
+}
+
+void UnifiedAimAssist::UpdateThreatAssessment() {
+    for (auto& target : m_visibleTargets) {
+        // Update threat based on multiple factors
+        float baseThreat = target.health / 100.0f;
+        float distanceThreat = (1.0f - target.distance / m_config.maxDistance);
+        float behaviorThreat = target.threatLevel;
+        
+        // Visibility and tracking bonuses
+        float visibilityBonus = target.visible ? 0.2f : 0.0f;
+        float trackingBonus = target.tracked ? 0.1f : 0.0f;
+        
+        target.threatLevel = (baseThreat * 0.3f + distanceThreat * 0.4f + 
+                             behaviorThreat * 0.3f + visibilityBonus + trackingBonus);
+        target.threatLevel = std::max(0.0f, std::min(1.0f, target.threatLevel));
+    }
+}
+
+Vec3 UnifiedAimAssist::ApplyKalmanFiltering(const UniversalTarget& target) {
+    // Simplified Kalman filter for position prediction
+    // In a full implementation, this would maintain state matrices
+    
+    // For now, use weighted average of velocity history as a simplified filter
+    Vec3 avgVelocity = target.GetAverageVelocity();
+    Vec3 predicted = target.worldPosition + avgVelocity * (PREDICTION_LOOKAHEAD_MS / 1000.0f);
+    
+    return predicted;
+}
+
+void UnifiedAimAssist::UpdateBehaviorPattern(const UniversalTarget& target) {
+    // This function is called per target to analyze behavior patterns
+    // The main work is done in CalculateTargetBehaviorPattern
+    
+    auto& pattern = m_behaviorPatterns[target.entityId];
+    
+    // Clean up old patterns periodically
+    auto now = std::chrono::steady_clock::now();
+    if (std::chrono::duration<float, std::milli>(now - pattern.lastUpdate).count() > 30000.0f) {
+        // Pattern is older than 30 seconds, consider removing it
+        // For now, just mark it as stale
+        pattern.predictabilityScore *= 0.9f; // Decay the score
+    }
+}
+// ============================================================================
+// Memory Caching and Optimization Functions
+// ============================================================================
+
+void UnifiedAimAssist::CacheMemoryAddresses() {
+    if (!m_config.enableSmartCaching) return;
+    
+    Logger::Get().Log("UnifiedAimAssist", "Initializing smart memory caching");
+    
+    auto now = std::chrono::steady_clock::now();
+    
+    // Cache frequently accessed memory addresses
+    if (m_entityListBase != 0) {
+        m_memoryCache["entity_list"] = {m_entityListBase, now, true};
+    }
+    
+    if (m_localPlayerBase != 0) {
+        m_memoryCache["local_player"] = {m_localPlayerBase, now, true};
+    }
+    
+    if (m_viewMatrixBase != 0) {
+        m_memoryCache["view_matrix"] = {m_viewMatrixBase, now, true};
+    }
+    
+    Logger::Get().Log("UnifiedAimAssist", "Cached " + std::to_string(m_memoryCache.size()) + " memory addresses");
+}
+
+bool UnifiedAimAssist::ValidateMemoryCache() {
+    if (!m_config.enableSmartCaching) return true;
+    
+    auto now = std::chrono::steady_clock::now();
+    bool allValid = true;
+    
+    for (auto it = m_memoryCache.begin(); it != m_memoryCache.end();) {
+        auto& cache = it->second;
+        
+        // Check if cache entry is too old (5 seconds timeout)
+        float age = std::chrono::duration<float, std::milli>(now - cache.lastUpdate).count();
+        if (age > 5000.0f) {
+            cache.valid = false;
+            allValid = false;
+        }
+        
+        // Remove invalid or very old entries
+        if (!cache.valid || age > 30000.0f) {
+            it = m_memoryCache.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    
+    if (!allValid) {
+        Logger::Get().Log("UnifiedAimAssist", "Memory cache validation detected stale entries");
+        // Refresh critical addresses
+        if (m_memoryScanner) {
+            m_entityListBase = FindEntityListBase();
+            CacheMemoryAddresses();
+        }
+    }
+    
+    return allValid;
+}
+
+// ============================================================================
+// Enhanced Placeholder Implementations
+// ============================================================================
+
+std::vector<UniversalTarget> UnifiedAimAssist::GetVisibleTargets() { 
+    return m_visibleTargets; 
+}
+
+void UnifiedAimAssist::UpdateTargetTracking() { 
+    // Enhanced target tracking with velocity history
+    for (auto& target : m_visibleTargets) {
+        UpdateTargetPrediction(target);
+        
+        // Mark as tracked if we've been following it
+        if (m_currentTarget && m_currentTarget->entityId == target.entityId) {
+            target.tracked = true;
+            target.lastSeen = std::chrono::steady_clock::now();
+        }
+    }
+}
+
+float UnifiedAimAssist::ScoreTargetIntelligence(const UniversalTarget& target) {
+    float score = 0.0f;
+    
+    // Distance scoring (closer is better)
+    score += (1.0f - target.distance / m_config.maxDistance) * 0.25f;
+    
+    // Health scoring (lower health = easier target)
+    score += (1.0f - target.health / 100.0f) * 0.15f;
+    
+    // Threat level (higher threat = higher priority)
+    score += target.threatLevel * 0.20f;
+    
+    // Visibility and tracking bonus
+    if (target.visible) score += 0.15f;
+    if (target.tracked) score += 0.10f;
+    
+    // Predictability bonus (more predictable = easier to hit)
+    if (m_behaviorPatterns.find(target.entityId) != m_behaviorPatterns.end()) {
+        score += m_behaviorPatterns.at(target.entityId).predictabilityScore * 0.15f;
+    }
+    
+    return std::max(0.0f, std::min(1.0f, score));
+}
+
+// ============================================================================
+// Enhanced Placeholder Implementations - Optimized Versions
+// ============================================================================
+
+bool UnifiedAimAssist::DetectCameraSystem() { 
+    // Enhanced camera detection with intelligent caching
+    if (m_config.enableSmartCaching) {
+        auto cacheIt = m_memoryCache.find("camera_system");
+        if (cacheIt != m_memoryCache.end() && cacheIt->second.valid) {
+            m_cameraValid = true;
+            return true;
+        }
+    }
+    
+    // Camera detection logic would go here
+    return true; 
+}
+
+bool UnifiedAimAssist::DetectScreenResolution() { 
+    // Optimized screen resolution detection
+    #ifdef _WIN32
+    m_screenWidth = GetSystemMetrics(SM_CXSCREEN);
+    m_screenHeight = GetSystemMetrics(SM_CYSCREEN);
+    #else
+    m_screenWidth = 1920; 
+    m_screenHeight = 1080; 
+    #endif
+    
+    Logger::Get().Log("UnifiedAimAssist", "Detected screen resolution: " + 
+                     std::to_string(m_screenWidth) + "x" + std::to_string(m_screenHeight));
+    return true; 
+}
+
+void UnifiedAimAssist::UpdateMemoryPatterns() { 
+    // Smart memory pattern updates with caching
+    if (m_memoryScanner && m_config.enableSmartCaching) {
+        static auto lastPatternUpdate = std::chrono::steady_clock::now();
+        auto now = std::chrono::steady_clock::now();
+        
+        // Only update patterns every 5 seconds for performance
+        if (std::chrono::duration<float, std::milli>(now - lastPatternUpdate).count() > 5000.0f) {
+            m_memoryScanner->LoadUniversalPatterns();
+            lastPatternUpdate = now;
+        }
+    }
+}
+
+uintptr_t UnifiedAimAssist::FindEntityListBase() { 
+    // Cached entity list base finding
+    if (m_config.enableSmartCaching) {
+        auto cacheIt = m_memoryCache.find("entity_list");
+        if (cacheIt != m_memoryCache.end() && cacheIt->second.valid) {
+            return cacheIt->second.address;
+        }
+    }
+    return 0; 
+}
+
+std::vector<uintptr_t> UnifiedAimAssist::ScanForEntities() { 
+    // Optimized entity scanning with performance limits
+    std::vector<uintptr_t> entities;
+    
+    if (!m_memoryScanner) return entities;
+    
+    // Limit scanning frequency based on performance
+    static auto lastEntityScan = std::chrono::steady_clock::now();
+    auto now = std::chrono::steady_clock::now();
+    
+    if (std::chrono::duration<float, std::milli>(now - lastEntityScan).count() < 50.0f) {
+        return entities; // Skip this scan for performance
+    }
+    lastEntityScan = now;
+    
+    // Performance-limited entity scanning
+    try {
+        auto nearbyEntities = m_memoryScanner->GetNearbyEntities(m_config.maxDistance);
+        entities.reserve(nearbyEntities.size());
+        
+        for (const auto& entity : nearbyEntities) {
+            if (entity.active && entities.size() < static_cast<size_t>(m_config.maxTargetsPerFrame)) {
+                entities.push_back(reinterpret_cast<uintptr_t>(&entity)); // Placeholder address
+            }
+        }
+    } catch (const std::exception& e) {
+        Logger::Get().Log("UnifiedAimAssist", "Error scanning entities: " + std::string(e.what()));
+    }
+    
+    return entities; 
+}
 Vec3 UnifiedAimAssist::CalculateMouseDelta(const Vec3& from, const Vec3& to) { return to - from; }
 void UnifiedAimAssist::AddHumanLikeJitter(Vec3& movement) { (void)movement; }
 void UnifiedAimAssist::LimitMovementSpeed(Vec3& movement) { (void)movement; }

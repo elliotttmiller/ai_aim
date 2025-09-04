@@ -107,6 +107,10 @@ struct UnifiedAimConfig {
     int updateFrequency = 60;           // Updates per second
     bool adaptivePerformance = true;    // Reduce frequency when not needed
     int maxTargetsPerFrame = 20;        // Limit targets processed per frame
+    bool enableObjectPooling = true;    // Use object pooling for performance
+    bool enableMultiThreading = true;   // Enable multi-threaded processing
+    bool enableSmartCaching = true;     // Intelligent memory caching
+    int memoryPoolSize = 100;           // Pre-allocated target pool size
     
     // Visual feedback (for debugging/development)
     bool drawFov = true;
@@ -122,26 +126,65 @@ struct UniversalTarget {
     Vec3 screenPosition;
     Vec3 predictedPosition;
     Vec3 velocity;
+    Vec3 velocityHistory[5];        // Track velocity history for better prediction
     float priority = 0.0f;
     float distance = 0.0f;
     float health = 100.0f;
+    float threatLevel = 0.0f;       // Dynamic threat assessment
     bool visible = false;
     bool tracked = false;
     bool isEnemy = true;
+    int velocityHistoryIndex = 0;   // Current index in velocity history
     std::chrono::steady_clock::time_point lastSeen;
     std::chrono::steady_clock::time_point firstSeen;
+    std::chrono::steady_clock::time_point lastVelocityUpdate;
     
     // Game-specific data
     uintptr_t entityAddress = 0;
     uint32_t entityId = 0;
     std::string entityType;
     
-    UniversalTarget() {
-        auto now = std::chrono::steady_clock::now();
-        lastSeen = firstSeen = now;
+    // Performance optimization: Object pooling support
+    bool inUse = false;
+    int poolIndex = -1;
+    
+    // Calculate average velocity from history for better prediction
+    Vec3 GetAverageVelocity() const {
+        Vec3 avg(0, 0, 0);
+        int count = 0;
+        for (int i = 0; i < 5; ++i) {
+            if (velocityHistory[i].Length() > 0.001f) {
+                avg += velocityHistory[i];
+                count++;
+            }
+        }
+        return count > 0 ? avg * (1.0f / count) : Vec3(0, 0, 0);
     }
     
-    // Calculate target age in milliseconds
+    // Get velocity acceleration for advanced prediction
+    Vec3 GetVelocityAcceleration() const {
+        if (velocityHistoryIndex < 2) return Vec3(0, 0, 0);
+        int curr = velocityHistoryIndex;
+        int prev = (curr - 1 + 5) % 5;
+        return velocityHistory[curr] - velocityHistory[prev];
+    }
+    
+    // Update velocity history with new velocity
+    void UpdateVelocityHistory(const Vec3& newVelocity) {
+        velocityHistory[velocityHistoryIndex] = newVelocity;
+        velocityHistoryIndex = (velocityHistoryIndex + 1) % 5;
+        velocity = newVelocity;
+        lastVelocityUpdate = std::chrono::steady_clock::now();
+    }
+    
+    UniversalTarget() {
+        auto now = std::chrono::steady_clock::now();
+        lastSeen = firstSeen = lastVelocityUpdate = now;
+        // Initialize velocity history
+        for (int i = 0; i < 5; ++i) {
+            velocityHistory[i] = Vec3(0, 0, 0);
+        }
+    }
     float GetAge() const {
         auto now = std::chrono::steady_clock::now();
         return std::chrono::duration<float, std::milli>(now - firstSeen).count();
@@ -192,13 +235,27 @@ public:
     void AdaptToEngine(GameEngine engine);
     void CalibrateForGame();
     
+    // Performance and threading optimization
+    void EnableOptimizations(bool enable = true);
+    void SetThreadingMode(bool enable) { m_config.enableMultiThreading = enable; }
+    void OptimizeForSystemLoad(float cpuUsage, float memoryUsage);
+    void PreloadConfiguration();
+    
+    // Advanced prediction and intelligence
+    void UpdateTargetPrediction(UniversalTarget& target);
+    Vec3 CalculateAdvancedPrediction(const UniversalTarget& target, float timeAhead);
+    float CalculateTargetBehaviorPattern(const UniversalTarget& target);
+    void UpdateThreatAssessment();
+    
     // Performance monitoring
     float GetAverageFrameTime() const { return m_averageFrameTime; }
     size_t GetTargetCount() const { return m_visibleTargets.size(); }
     float GetCurrentAccuracy() const;
     float GetCurrentPerformance() const;
+    float GetSystemLoad() const;
+    size_t GetMemoryUsage() const;
     
-    // Visual debugging (for development)
+    // Visual debugging (for development)  
     void DrawDebugOverlay();
     void DrawFOVCircle();
     void DrawTargets();
@@ -258,27 +315,58 @@ private:
     void SimulateHumanReactionTime();
     void AddRandomDelay();
     
+    // Performance optimization and threading
+    void OptimizeMemoryAccess();
+    void ParallelizeTargetProcessing();
+    void UpdateTargetPool();
+    UniversalTarget* GetPooledTarget();
+    void ReturnTargetToPool(UniversalTarget* target);
+    
+    // Advanced prediction algorithms
+    Vec3 ApplyKalmanFiltering(const UniversalTarget& target);
+    Vec3 PredictWithAcceleration(const UniversalTarget& target, float timeMs);
+    float CalculateInterceptionTime(const UniversalTarget& target);
+    
+    // Intelligence and behavior optimization
+    void AnalyzePlayerBehavior();
+    void AdaptToGamePace();
+    void UpdateBehaviorPattern(const UniversalTarget& target);
+    float ScoreTargetIntelligence(const UniversalTarget& target);
+    
     // Performance optimization
     void OptimizeUpdateFrequency();
     bool ShouldSkipFrame();
     void ReduceQualityForPerformance();
     void UpdatePerformanceMetrics();
     
-    // Memory scanning integration
+    // Memory scanning integration with caching
     bool InitializeMemoryScanning();
     void UpdateMemoryPatterns();
     uintptr_t FindEntityListBase();
     std::vector<uintptr_t> ScanForEntities();
+    void CacheMemoryAddresses();
+    bool ValidateMemoryCache();
     
     // Configuration and state
     UnifiedAimConfig m_config;
     bool m_initialized = false;
     bool m_memoryInitialized = false;
     
-    // Target management
+    // Target management with object pooling
     UniversalTarget* m_currentTarget = nullptr;
     std::vector<UniversalTarget> m_visibleTargets;
     std::vector<UniversalTarget> m_targetHistory;
+    std::vector<UniversalTarget> m_targetPool;  // Object pool for performance
+    std::vector<bool> m_poolUsage;             // Track pool usage
+    
+    // Advanced behavior analysis
+    struct BehaviorPattern {
+        float averageMovementSpeed = 0.0f;
+        float averageDirectionChange = 0.0f;
+        float predictabilityScore = 0.0f;
+        std::chrono::steady_clock::time_point lastUpdate;
+    };
+    std::unordered_map<uint32_t, BehaviorPattern> m_behaviorPatterns;
     
     // Camera and rendering state
     float m_viewMatrix[16] = {0};
@@ -310,11 +398,23 @@ private:
     std::mt19937 m_randomGenerator;
     std::uniform_real_distribution<float> m_jitterDistribution;
     
-    // Performance tracking
+    // Performance tracking and optimization
     float m_accuracyHistory[100] = {0}; // Last 100 shots
     int m_accuracyIndex = 0;
     float m_performanceHistory[60] = {0}; // Last 60 frames
     int m_performanceIndex = 0;
+    float m_systemLoadHistory[30] = {0}; // System load tracking
+    int m_systemLoadIndex = 0;
+    size_t m_memoryUsage = 0;
+    
+    // Intelligent caching system
+    struct MemoryCache {
+        uintptr_t address;
+        std::chrono::steady_clock::time_point lastUpdate;
+        bool valid;
+    };
+    std::unordered_map<std::string, MemoryCache> m_memoryCache;
+    std::chrono::steady_clock::time_point m_lastCacheValidation;
     
     // Memory scanning integration
     std::unique_ptr<UniversalMemoryScanner> m_memoryScanner;
