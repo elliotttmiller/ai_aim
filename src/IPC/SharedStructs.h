@@ -4,9 +4,14 @@
 // --- Shared IPC Data Structures ---
 // These must match exactly between DLL, Overlay, and Trainer
 
+#ifndef VEC3_DEFINED
+#define VEC3_DEFINED
 struct Vec3 {
     float x, y, z;
+    Vec3() : x(0), y(0), z(0) {}
+    Vec3(float x_, float y_, float z_) : x(x_), y(y_), z(z_) {}
 };
+#endif
 
 struct RaylibCamera {
     Vec3 position;

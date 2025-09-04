@@ -1,5 +1,21 @@
 // src/Overlay/Core/DllMain.cpp
-#include <Windows.h>
+#ifdef _WIN32
+    #include <Windows.h>
+#else
+    // Cross-platform stubs
+    typedef void* HMODULE;
+    typedef unsigned long DWORD;
+    typedef void* LPVOID;
+    typedef int BOOL;
+    #define TRUE 1
+    #define FALSE 0
+    #define DLL_PROCESS_ATTACH 1
+    #define DLL_THREAD_ATTACH 2
+    #define DLL_THREAD_DETACH 3
+    #define DLL_PROCESS_DETACH 0
+    #define UNREFERENCED_PARAMETER(x) ((void)x)
+    #define APIENTRY
+#endif
 #include "Main.h"
 #include <fstream>
 
@@ -9,9 +25,10 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
     switch (ul_reason_for_call) {
     case DLL_PROCESS_ATTACH:
         {
+            // Production logging only
             std::ofstream debugLog("bin/debug.log", std::ios::app);
             debugLog << "[Overlay] DLL_PROCESS_ATTACH" << std::endl;
-            MessageBoxA(nullptr, "Overlay DLL loaded!", "Overlay Debug", MB_OK | MB_ICONINFORMATION);
+            
             DisableThreadLibraryCalls(hModule);
             HANDLE hThread = CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)Main::MainLoop, hModule, 0, nullptr);
             if (hThread) {

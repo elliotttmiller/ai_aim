@@ -1,13 +1,25 @@
 #include "Main.h"
-#include <windows.h>
-#include <TlHelp32.h>
-#include <gl/GL.h>
-#include <dwmapi.h>
+#ifdef _WIN32
+    #include <windows.h>
+    #include <TlHelp32.h>
+    #include <gl/GL.h>
+    #include <dwmapi.h>
+#else
+    // Cross-platform stubs
+    typedef void* HWND;
+    typedef void* HDC;
+    typedef void* HGLRC;
+    typedef struct { int x, y; } POINT;
+    typedef struct { int left, top, right, bottom; } RECT;
+    void Sleep(int) {}
+    bool GetCursorPos(POINT*) { return false; }
+    bool ScreenToClient(HWND, POINT*) { return false; }
+    bool GetClientRect(HWND, RECT*) { return false; }
+    HWND FindWindow(const char*, const char*) { return nullptr; }
+#endif
 #include <string>
 #include <imgui.h>
-#include <imgui_impl_win32.h>
-#include <imgui_impl_opengl3.h>
-#include "AimAssist/AimAssist.h"
+#include "../AimAssist/AimAssist.h"
 #include "Memory/GameData.h"
 #include "../../Utils/Logger.h"
 #pragma comment(lib, "dwmapi.lib")

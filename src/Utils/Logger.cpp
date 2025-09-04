@@ -27,7 +27,12 @@ void Logger::Log(const std::string& component, const std::string& message) {
         auto now = std::chrono::system_clock::now();
         auto time_t_now = std::chrono::system_clock::to_time_t(now);
         tm buf;
+        // Cross-platform compatibility for time functions
+#ifdef _WIN32
         localtime_s(&buf, &time_t_now);
+#else
+        localtime_r(&time_t_now, &buf);
+#endif
         m_logFile << "[" << std::put_time(&buf, "%H:%M:%S") << "] [" << component << "] " << message << std::endl;
     }
 }

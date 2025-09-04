@@ -2,7 +2,15 @@
 #pragma once
 #include "../../IPC/SharedStructs.h"
 #include "../Utils/Singleton.h"
-#include <Windows.h>
+#ifdef _WIN32
+    #include <Windows.h>
+#else
+    // Cross-platform stubs
+    typedef void* HANDLE;
+    typedef unsigned long DWORD;
+    typedef unsigned char BYTE;
+    typedef size_t SIZE_T;
+#endif
 #include <vector>
 
 // --- Data Structures ---

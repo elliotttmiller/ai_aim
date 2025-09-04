@@ -1,5 +1,22 @@
 #pragma once
-#include <Windows.h>
+
+// Cross-platform includes
+#ifdef _WIN32
+    #include <Windows.h>
+#else
+    // Linux/Unix alternatives for shared memory
+    #include <sys/mman.h>
+    #include <sys/stat.h>
+    #include <fcntl.h>
+    #include <unistd.h>
+    #include <cstring>
+    // Define Windows types for cross-platform compatibility
+    typedef void* HANDLE;
+    #define INVALID_HANDLE_VALUE ((HANDLE)-1)
+    const int PAGE_READWRITE = 0;
+    const int FILE_MAP_ALL_ACCESS = 0;
+#endif
+
 #include "SharedStructs.h"
 #include <string>
 
