@@ -18,8 +18,8 @@
  */
 
 #include "../Utils/UnifiedUtilities.h"
-#include "../Utils/UniversalMemoryScanner.h"
-#include "../Utils/UniversalConfig.h"
+#include "../Utils/UnifiedMemoryScanner.h"
+#include "../Utils/UnifiedConfig.h"
 #include "../Utils/GameDetection.h"
 #include "../Utils/Logger.h"
 #include "../IPC/SharedMemory.h"
@@ -416,8 +416,8 @@ private:
     std::unordered_map<std::string, MemoryCache> m_memoryCache;
     std::chrono::steady_clock::time_point m_lastCacheValidation;
     
-    // Memory scanning integration
-    std::unique_ptr<UniversalMemoryScanner> m_memoryScanner;
+    // Memory scanning integration with unified system
+    std::unique_ptr<UnifiedMemoryScanner> m_memoryScanner;
     uintptr_t m_entityListBase = 0;
     uintptr_t m_localPlayerBase = 0;
     uintptr_t m_viewMatrixBase = 0;

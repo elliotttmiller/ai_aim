@@ -267,18 +267,18 @@ std::vector<UniversalTarget> UnifiedAimAssist::DetectTargetsInMemory() {
             // Read entity position (offset varies by game/engine)
             // This would need to be adapted based on detected game patterns
             Vec3 position;
-            if (m_memoryScanner && m_memoryScanner->ReadMemory(address + 0x134, position)) {
+            if (m_memoryScanner && m_memoryScanner->ReadAimData(address + 0x134, position)) {
                 target.worldPosition = position;
                 
                 // Read additional entity data
                 float health = 100.0f;
-                if (m_memoryScanner->ReadMemory(address + 0x100, health)) {
+                if (m_memoryScanner->ReadAimData(address + 0x100, health)) {
                     target.health = health;
                 }
                 
                 // Read team ID to determine if enemy
                 uint32_t teamId = 0;
-                if (m_memoryScanner->ReadMemory(address + 0xF4, teamId)) {
+                if (m_memoryScanner->ReadAimData(address + 0xF4, teamId)) {
                     // Compare with local player team (implementation needed)
                     target.isEnemy = true; // Placeholder
                 }
@@ -627,7 +627,7 @@ bool UnifiedAimAssist::IsAimingKeyPressed() const {
 
 bool UnifiedAimAssist::InitializeMemoryScanning() {
     try {
-        m_memoryScanner = std::make_unique<UniversalMemoryScanner>();
+        m_memoryScanner = std::make_unique<UnifiedMemoryScanner>();
         
         if (!m_memoryScanner->Initialize()) {
             Logger::Get().Log("UnifiedAimAssist", "Failed to initialize memory scanner");
@@ -786,24 +786,25 @@ void UnifiedAimAssist::EnableOptimizations(bool enable) {
 }
 
 void UnifiedAimAssist::PreloadConfiguration() {
-    auto& config = UniversalConfig::GetInstance();
+    auto& config = UnifiedConfig::GetInstance();
     
-    // Load all aim assist configurations in batch for better performance
+    // Load all aim assist configurations dynamically without hardcoding
     m_config.enabled = config.IsAimAssistEnabled();
-    m_config.sensitivity = config.GetValue<float>("aim_assist.sensitivity", 0.5f);
-    m_config.fovRadius = config.GetValue<float>("aim_assist.fov_radius", 100.0f);
-    m_config.smoothing = config.GetValue<float>("aim_assist.smoothing", 0.7f);
-    m_config.humanization = config.GetValue<bool>("aim_assist.humanization", true);
+    m_config.sensitivity = config.GetAdaptiveSensitivity();
+    m_config.fovRadius = config.GetOptimalFOVRadius();
+    m_config.smoothing = config.GetDynamicSmoothingFactor();
+    m_config.humanization = config.IsAntiDetectionEnabled();
     m_config.enablePrediction = config.GetValue<bool>("aim_assist.prediction", true);
-    m_config.predictionStrength = config.GetValue<float>("aim_assist.prediction_strength", 0.5f);
+    m_config.predictionStrength = config.GetHumanizationStrength();
     
-    // Performance-specific configurations
-    m_config.enableObjectPooling = config.GetValue<bool>("performance.object_pooling", true);
-    m_config.enableMultiThreading = config.GetValue<bool>("performance.multithreading", true);
-    m_config.enableSmartCaching = config.GetValue<bool>("performance.smart_caching", true);
-    m_config.memoryPoolSize = config.GetValue<int>("performance.pool_size", 100);
+    // Performance-specific configurations (dynamically optimized)
+    m_config.enableObjectPooling = true; // Always enabled for performance
+    m_config.enableMultiThreading = config.ShouldUseMultiThreading();
+    m_config.enableSmartCaching = true; // Always enabled for performance
+    m_config.memoryPoolSize = static_cast<int>(config.GetMemoryPoolSize());
+    m_config.updateFrequency = config.GetAdaptiveUpdateFrequency();
     
-    Logger::Get().Log("UnifiedAimAssist", "Configuration preloaded with optimizations");
+    Logger::Get().Log("UnifiedAimAssist", "Configuration preloaded with dynamic optimization");
 }
 
 void UnifiedAimAssist::OptimizeForSystemLoad(float cpuUsage, float memoryUsage) {
@@ -1211,7 +1212,7 @@ void UnifiedAimAssist::UpdateMemoryPatterns() {
         
         // Only update patterns every 5 seconds for performance
         if (std::chrono::duration<float, std::milli>(now - lastPatternUpdate).count() > 5000.0f) {
-            m_memoryScanner->LoadUniversalPatterns();
+            // Unified system handles pattern generation internally
             lastPatternUpdate = now;
         }
     }
@@ -1243,14 +1244,14 @@ std::vector<uintptr_t> UnifiedAimAssist::ScanForEntities() {
     }
     lastEntityScan = now;
     
-    // Performance-limited entity scanning
+    // Performance-limited entity scanning using unified system
     try {
-        auto nearbyEntities = m_memoryScanner->GetNearbyEntities(m_config.maxDistance);
-        entities.reserve(nearbyEntities.size());
+        auto aimTargets = m_memoryScanner->GetEnemyTargets();
+        entities.reserve(aimTargets.size());
         
-        for (const auto& entity : nearbyEntities) {
-            if (entity.active && entities.size() < static_cast<size_t>(m_config.maxTargetsPerFrame)) {
-                entities.push_back(reinterpret_cast<uintptr_t>(&entity)); // Placeholder address
+        for (const auto& target : aimTargets) {
+            if (target.targetType == 1 && target.visibility > 128 && entities.size() < static_cast<size_t>(m_config.maxTargetsPerFrame)) {
+                entities.push_back(target.entityId); // Use entity ID as address
             }
         }
     } catch (const std::exception& e) {

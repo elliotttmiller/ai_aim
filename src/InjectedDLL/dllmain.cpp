@@ -20,8 +20,8 @@
     HMODULE CreateThread(void*, std::size_t, ThreadStartRoutine, HMODULE, DWORD, void*) { return nullptr; }
 #endif
 #include "../Utils/Logger.h"
-#include "../Utils/UniversalConfig.h"
-#include "../Utils/UniversalMemoryScanner.h"
+#include "../Utils/UnifiedConfig.h"
+#include "../Utils/UnifiedMemoryScanner.h"
 #include "../Utils/UnifiedAimAssist.h"
 #include "../IPC/SharedStructs.h"
 #include <thread>
@@ -41,15 +41,15 @@ DWORD WINAPI MainThread(HMODULE hModule) {
     Logger::Get().Log("InjectedDLL", "Injected into target process successfully");
 
     try {
-        // Initialize universal configuration system
-        auto& config = UniversalConfig::GetInstance();
+        // Initialize unified configuration system
+        auto& config = UnifiedConfig::GetInstance();
         if (!config.Initialize()) {
             Logger::Get().Log("InjectedDLL", "ERROR: Failed to initialize configuration system");
             FreeLibraryAndExitThread(hModule, 1);
         }
 
-        // Initialize memory scanner for target detection
-        auto& scanner = UniversalMemoryScanner::GetInstance();
+        // Initialize unified memory scanner for target detection
+        auto& scanner = UnifiedMemoryScanner::GetInstance();
         if (!scanner.Initialize()) {
             Logger::Get().Log("InjectedDLL", "ERROR: Failed to initialize memory scanner");
             FreeLibraryAndExitThread(hModule, 1);

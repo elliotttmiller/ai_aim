@@ -1,8 +1,8 @@
 add_library(Utils 
     Logger.cpp 
     GameDetection.cpp
-    UniversalConfig.cpp
-    UniversalMemoryScanner.cpp
+    UnifiedConfig.cpp
+    UnifiedMemoryScanner.cpp
     UnifiedAimAssist.cpp
 )
 target_include_directories(Utils PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
