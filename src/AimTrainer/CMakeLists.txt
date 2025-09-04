@@ -6,7 +6,11 @@ set_target_properties(AimTrainer PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/bin/Debug
     RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/bin/Release
 )
-
+if(MSVC)
+    target_compile_options(AimTrainer PRIVATE /W4 /WX /EHsc)
+else()
+    target_compile_options(AimTrainer PRIVATE -Wall -Wextra -pedantic $<$<CONFIG:Debug>:-Werror>)
+endif()
 add_custom_command(TARGET AimTrainer POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         $<TARGET_FILE:AimTrainer>

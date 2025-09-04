@@ -19,9 +19,6 @@
     <ClCompile Include="C:\Users\AMD\ai_aim\src\Overlay\IPC\SharedMemory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\AMD\ai_aim\src\Overlay\IPC\NamedPipe.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="C:\Users\AMD\ai_aim\src\Overlay\Renderer\Renderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -34,9 +31,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="C:\Users\AMD\ai_aim\src\Overlay\IPC\SharedMemory.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="C:\Users\AMD\ai_aim\src\Overlay\IPC\NamedPipe.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

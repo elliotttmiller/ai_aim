@@ -196,7 +196,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </ProjectReference>
-    <ProjectReference Include="C:\Users\AMD\ai_aim\libs\raylib\ALL_BUILD.vcxproj">
+    <ProjectReference Include="C:\Users\AMD\ai_aim\libs\raylib\src\ALL_BUILD.vcxproj">
       <Project>{73F0552F-AAFF-30EB-8F97-B478EC73B459}</Project>
       <Name>ALL_BUILD</Name>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>

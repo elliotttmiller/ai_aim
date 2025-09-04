@@ -39,5 +39,3 @@ struct GameDataPacket {
 };
 
 // Add any additional shared structs, enums, or constants here as needed
-
-constexpr wchar_t IPC_PIPE_NAME[] = L"\\\\.\\pipe\\AI_AIM_IPC";

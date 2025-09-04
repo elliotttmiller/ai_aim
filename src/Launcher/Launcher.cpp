@@ -5,21 +5,45 @@
 #include <fstream>
 #include <string>
 #include <thread>
+#include <filesystem>
 #include "../Utils/Logger.h"
 #include "c:/Users/AMD/ai_aim/src/Utils/StringConvert.h"
-#include "../IPC/NamedPipe.h"
 #include "../IPC/SharedStructs.h"
 
 int main() {
     Logger::Get().InitDefault();
     Logger::Get().Log("Launcher", "Starting up...");
-    // Read config (game_memory.cfg)
-    std::string targetProcess = "AimTrainer.exe"; // TODO: Parse from config
-    // Launch target and injector (external process launch logic)
+    // Parse config (game_memory.cfg)
+    std::string configPath = "C:/Users/AMD/ai_aim/config/game_memory.cfg";
+    std::ifstream cfg(configPath);
+    std::string targetProcess = "AimTrainer.exe";
+    if (cfg.is_open()) {
+        std::string line;
+        while (std::getline(cfg, line)) {
+            if (line.find("module_name=") == 0) {
+                targetProcess = line.substr(12);
+            }
+        }
+        cfg.close();
+    } else {
+        Logger::Get().Log("Launcher", "Config file missing: " + configPath);
+        return 1;
+    }
+    // Check required DLLs
+    std::filesystem::path debugDir = "C:/Users/AMD/ai_aim/bin/Debug";
+    if (!std::filesystem::exists(debugDir / "Overlay.dll")) {
+        Logger::Get().Log("Launcher", "Missing Overlay.dll");
+        return 1;
+    }
+    if (!std::filesystem::exists(debugDir / "InjectedDLL.dll")) {
+        Logger::Get().Log("Launcher", "Missing InjectedDLL.dll");
+        return 1;
+    }
+
     Logger::Get().Log("Launcher", "Launched target and injector.");
     // Overlay window setup
-    // Use double backslashes for Windows paths
-    std::wstring aimTrainerPath = L"C:\\Users\\AMD\\ai_aim\\bin\\Debug\\AimTrainer.exe";
+    // Use config value for AimTrainer path
+    std::wstring aimTrainerPath = std::wstring(debugDir.wstring().begin(), debugDir.wstring().end()) + L"\\" + std::wstring(targetProcess.begin(), targetProcess.end());
     std::wstring injectorPath = L"C:\\Users\\AMD\\ai_aim\\bin\\Debug\\Injector.exe";
     std::wstring workingDir = L"C:\\Users\\AMD\\ai_aim\\bin\\Debug";
     Logger::Get().Log("Launcher", "AimTrainer path: " + WStringToString(aimTrainerPath));
@@ -54,8 +78,5 @@ int main() {
     }
     Logger::Get().Log("Launcher", "Started Injector.exe (PID: " + std::to_string(pi2.dwProcessId) + ")");
 
-    // Named Pipe for IPC
-    NamedPipe pipe(IPC_PIPE_NAME);
-    pipe.ConnectClient();
-    Logger::Get().Log("Launcher", "Connected to IPC pipe.");
+    return 0;
 }

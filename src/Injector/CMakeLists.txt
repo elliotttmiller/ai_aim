@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.16)
 project(Injector)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -19,7 +19,7 @@ set_target_properties(Injector PROPERTIES
 
 # Enable strict warnings and treat warnings as errors in Debug
 if(MSVC)
-    target_compile_options(Injector PRIVATE /W4 $<$<CONFIG:Debug>:/WX>)
+    target_compile_options(Injector PRIVATE /W4 /WX /EHsc)
 else()
     target_compile_options(Injector PRIVATE -Wall -Wextra -pedantic $<$<CONFIG:Debug>:-Werror>)
 endif()

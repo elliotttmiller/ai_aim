@@ -8,7 +8,7 @@ set_target_properties(InjectedDLL PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/bin/Release
 )
 if(MSVC)
-    target_compile_options(InjectedDLL PRIVATE /W4 $<$<CONFIG:Debug>:/WX>)
+    target_compile_options(InjectedDLL PRIVATE /W4 /WX /EHsc)
 else()
     target_compile_options(InjectedDLL PRIVATE -Wall -Wextra -pedantic $<$<CONFIG:Debug>:-Werror>)
 endif()

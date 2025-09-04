@@ -87,7 +87,7 @@
   <PropertyGroup />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\AMD\ai_aim\src\Overlay;C:\Users\AMD\ai_aim\libs\dear-imgui;C:\Users\AMD\ai_aim\libs\dear-imgui\backends;C:\Users\AMD\ai_aim\libs\minhook\include;C:\Users\AMD\ai_aim\libs\raylib\src;C:\Users\AMD\ai_aim\src\Overlay\IPC;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\AMD\ai_aim\src\Overlay;C:\Users\AMD\ai_aim\libs\dear-imgui;C:\Users\AMD\ai_aim\libs\dear-imgui\backends;C:\Users\AMD\ai_aim\libs\minhook\include;C:\Users\AMD\ai_aim\libs\raylib\src;C:\Users\AMD\ai_aim\src\Overlay\IPC;C:\Users\AMD\ai_aim\src\Utils;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -112,10 +112,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WINDOWS;CMAKE_INTDIR=\"Debug\";Overlay_EXPORTS</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\AMD\ai_aim\src\Overlay;C:\Users\AMD\ai_aim\libs\dear-imgui;C:\Users\AMD\ai_aim\libs\dear-imgui\backends;C:\Users\AMD\ai_aim\libs\minhook\include;C:\Users\AMD\ai_aim\libs\raylib\src;C:\Users\AMD\ai_aim\src\Overlay\IPC;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\AMD\ai_aim\src\Overlay;C:\Users\AMD\ai_aim\libs\dear-imgui;C:\Users\AMD\ai_aim\libs\dear-imgui\backends;C:\Users\AMD\ai_aim\libs\minhook\include;C:\Users\AMD\ai_aim\libs\raylib\src;C:\Users\AMD\ai_aim\src\Overlay\IPC;C:\Users\AMD\ai_aim\src\Utils;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\AMD\ai_aim\src\Overlay;C:\Users\AMD\ai_aim\libs\dear-imgui;C:\Users\AMD\ai_aim\libs\dear-imgui\backends;C:\Users\AMD\ai_aim\libs\minhook\include;C:\Users\AMD\ai_aim\libs\raylib\src;C:\Users\AMD\ai_aim\src\Overlay\IPC;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\AMD\ai_aim\src\Overlay;C:\Users\AMD\ai_aim\libs\dear-imgui;C:\Users\AMD\ai_aim\libs\dear-imgui\backends;C:\Users\AMD\ai_aim\libs\minhook\include;C:\Users\AMD\ai_aim\libs\raylib\src;C:\Users\AMD\ai_aim\src\Overlay\IPC;C:\Users\AMD\ai_aim\src\Utils;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -135,7 +135,7 @@ exit /b %1
 if %errorlevel% neq 0 goto :VCEnd</Command>
     </PostBuildEvent>
     <Link>
-      <AdditionalDependencies>..\..\bin\Debug\imgui.lib;..\..\bin\Debug\minhook.x64d.lib;dxgi.lib;opengl32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>..\..\bin\Debug\imgui.lib;..\..\bin\Debug\minhook.x64d.lib;dxgi.lib;opengl32.lib;..\..\bin\Debug\Utils.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <DataExecutionPrevention></DataExecutionPrevention>
@@ -154,7 +154,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\AMD\ai_aim\src\Overlay;C:\Users\AMD\ai_aim\libs\dear-imgui;C:\Users\AMD\ai_aim\libs\dear-imgui\backends;C:\Users\AMD\ai_aim\libs\minhook\include;C:\Users\AMD\ai_aim\libs\raylib\src;C:\Users\AMD\ai_aim\src\Overlay\IPC;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\AMD\ai_aim\src\Overlay;C:\Users\AMD\ai_aim\libs\dear-imgui;C:\Users\AMD\ai_aim\libs\dear-imgui\backends;C:\Users\AMD\ai_aim\libs\minhook\include;C:\Users\AMD\ai_aim\libs\raylib\src;C:\Users\AMD\ai_aim\src\Overlay\IPC;C:\Users\AMD\ai_aim\src\Utils;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <ExceptionHandling>Sync</ExceptionHandling>
@@ -169,6 +169,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <SupportJustMyCode></SupportJustMyCode>
       <TreatWChar_tAsBuiltInType></TreatWChar_tAsBuiltInType>
+      <TreatWarningAsError>true</TreatWarningAsError>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR="Release";Overlay_EXPORTS</PreprocessorDefinitions>
@@ -179,10 +180,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"Release\";Overlay_EXPORTS</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\AMD\ai_aim\src\Overlay;C:\Users\AMD\ai_aim\libs\dear-imgui;C:\Users\AMD\ai_aim\libs\dear-imgui\backends;C:\Users\AMD\ai_aim\libs\minhook\include;C:\Users\AMD\ai_aim\libs\raylib\src;C:\Users\AMD\ai_aim\src\Overlay\IPC;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\AMD\ai_aim\src\Overlay;C:\Users\AMD\ai_aim\libs\dear-imgui;C:\Users\AMD\ai_aim\libs\dear-imgui\backends;C:\Users\AMD\ai_aim\libs\minhook\include;C:\Users\AMD\ai_aim\libs\raylib\src;C:\Users\AMD\ai_aim\src\Overlay\IPC;C:\Users\AMD\ai_aim\src\Utils;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\AMD\ai_aim\src\Overlay;C:\Users\AMD\ai_aim\libs\dear-imgui;C:\Users\AMD\ai_aim\libs\dear-imgui\backends;C:\Users\AMD\ai_aim\libs\minhook\include;C:\Users\AMD\ai_aim\libs\raylib\src;C:\Users\AMD\ai_aim\src\Overlay\IPC;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\AMD\ai_aim\src\Overlay;C:\Users\AMD\ai_aim\libs\dear-imgui;C:\Users\AMD\ai_aim\libs\dear-imgui\backends;C:\Users\AMD\ai_aim\libs\minhook\include;C:\Users\AMD\ai_aim\libs\raylib\src;C:\Users\AMD\ai_aim\src\Overlay\IPC;C:\Users\AMD\ai_aim\src\Utils;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -202,7 +203,7 @@ exit /b %1
 if %errorlevel% neq 0 goto :VCEnd</Command>
     </PostBuildEvent>
     <Link>
-      <AdditionalDependencies>..\..\bin\Release\imgui.lib;..\..\bin\Release\minhook.x64.lib;dxgi.lib;opengl32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>..\..\bin\Release\imgui.lib;..\..\bin\Release\minhook.x64.lib;dxgi.lib;opengl32.lib;..\..\bin\Release\Utils.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <DataExecutionPrevention></DataExecutionPrevention>
@@ -221,7 +222,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\AMD\ai_aim\src\Overlay;C:\Users\AMD\ai_aim\libs\dear-imgui;C:\Users\AMD\ai_aim\libs\dear-imgui\backends;C:\Users\AMD\ai_aim\libs\minhook\include;C:\Users\AMD\ai_aim\libs\raylib\src;C:\Users\AMD\ai_aim\src\Overlay\IPC;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\AMD\ai_aim\src\Overlay;C:\Users\AMD\ai_aim\libs\dear-imgui;C:\Users\AMD\ai_aim\libs\dear-imgui\backends;C:\Users\AMD\ai_aim\libs\minhook\include;C:\Users\AMD\ai_aim\libs\raylib\src;C:\Users\AMD\ai_aim\src\Overlay\IPC;C:\Users\AMD\ai_aim\src\Utils;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <ExceptionHandling>Sync</ExceptionHandling>
@@ -236,6 +237,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <SupportJustMyCode></SupportJustMyCode>
       <TreatWChar_tAsBuiltInType></TreatWChar_tAsBuiltInType>
+      <TreatWarningAsError>true</TreatWarningAsError>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR="MinSizeRel";Overlay_EXPORTS</PreprocessorDefinitions>
@@ -246,10 +248,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"MinSizeRel\";Overlay_EXPORTS</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\AMD\ai_aim\src\Overlay;C:\Users\AMD\ai_aim\libs\dear-imgui;C:\Users\AMD\ai_aim\libs\dear-imgui\backends;C:\Users\AMD\ai_aim\libs\minhook\include;C:\Users\AMD\ai_aim\libs\raylib\src;C:\Users\AMD\ai_aim\src\Overlay\IPC;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\AMD\ai_aim\src\Overlay;C:\Users\AMD\ai_aim\libs\dear-imgui;C:\Users\AMD\ai_aim\libs\dear-imgui\backends;C:\Users\AMD\ai_aim\libs\minhook\include;C:\Users\AMD\ai_aim\libs\raylib\src;C:\Users\AMD\ai_aim\src\Overlay\IPC;C:\Users\AMD\ai_aim\src\Utils;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\AMD\ai_aim\src\Overlay;C:\Users\AMD\ai_aim\libs\dear-imgui;C:\Users\AMD\ai_aim\libs\dear-imgui\backends;C:\Users\AMD\ai_aim\libs\minhook\include;C:\Users\AMD\ai_aim\libs\raylib\src;C:\Users\AMD\ai_aim\src\Overlay\IPC;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\AMD\ai_aim\src\Overlay;C:\Users\AMD\ai_aim\libs\dear-imgui;C:\Users\AMD\ai_aim\libs\dear-imgui\backends;C:\Users\AMD\ai_aim\libs\minhook\include;C:\Users\AMD\ai_aim\libs\raylib\src;C:\Users\AMD\ai_aim\src\Overlay\IPC;C:\Users\AMD\ai_aim\src\Utils;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -269,7 +271,7 @@ exit /b %1
 if %errorlevel% neq 0 goto :VCEnd</Command>
     </PostBuildEvent>
     <Link>
-      <AdditionalDependencies>..\..\bin\MinSizeRel\imgui.lib;..\..\bin\MinSizeRel\minhook.x64.lib;dxgi.lib;opengl32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>..\..\bin\MinSizeRel\imgui.lib;..\..\bin\MinSizeRel\minhook.x64.lib;dxgi.lib;opengl32.lib;..\..\bin\MinSizeRel\Utils.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <DataExecutionPrevention></DataExecutionPrevention>
@@ -288,7 +290,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\AMD\ai_aim\src\Overlay;C:\Users\AMD\ai_aim\libs\dear-imgui;C:\Users\AMD\ai_aim\libs\dear-imgui\backends;C:\Users\AMD\ai_aim\libs\minhook\include;C:\Users\AMD\ai_aim\libs\raylib\src;C:\Users\AMD\ai_aim\src\Overlay\IPC;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\AMD\ai_aim\src\Overlay;C:\Users\AMD\ai_aim\libs\dear-imgui;C:\Users\AMD\ai_aim\libs\dear-imgui\backends;C:\Users\AMD\ai_aim\libs\minhook\include;C:\Users\AMD\ai_aim\libs\raylib\src;C:\Users\AMD\ai_aim\src\Overlay\IPC;C:\Users\AMD\ai_aim\src\Utils;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -304,6 +306,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <SupportJustMyCode></SupportJustMyCode>
       <TreatWChar_tAsBuiltInType></TreatWChar_tAsBuiltInType>
+      <TreatWarningAsError>true</TreatWarningAsError>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR="RelWithDebInfo";Overlay_EXPORTS</PreprocessorDefinitions>
@@ -312,10 +315,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"RelWithDebInfo\";Overlay_EXPORTS</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\AMD\ai_aim\src\Overlay;C:\Users\AMD\ai_aim\libs\dear-imgui;C:\Users\AMD\ai_aim\libs\dear-imgui\backends;C:\Users\AMD\ai_aim\libs\minhook\include;C:\Users\AMD\ai_aim\libs\raylib\src;C:\Users\AMD\ai_aim\src\Overlay\IPC;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\AMD\ai_aim\src\Overlay;C:\Users\AMD\ai_aim\libs\dear-imgui;C:\Users\AMD\ai_aim\libs\dear-imgui\backends;C:\Users\AMD\ai_aim\libs\minhook\include;C:\Users\AMD\ai_aim\libs\raylib\src;C:\Users\AMD\ai_aim\src\Overlay\IPC;C:\Users\AMD\ai_aim\src\Utils;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\AMD\ai_aim\src\Overlay;C:\Users\AMD\ai_aim\libs\dear-imgui;C:\Users\AMD\ai_aim\libs\dear-imgui\backends;C:\Users\AMD\ai_aim\libs\minhook\include;C:\Users\AMD\ai_aim\libs\raylib\src;C:\Users\AMD\ai_aim\src\Overlay\IPC;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\AMD\ai_aim\src\Overlay;C:\Users\AMD\ai_aim\libs\dear-imgui;C:\Users\AMD\ai_aim\libs\dear-imgui\backends;C:\Users\AMD\ai_aim\libs\minhook\include;C:\Users\AMD\ai_aim\libs\raylib\src;C:\Users\AMD\ai_aim\src\Overlay\IPC;C:\Users\AMD\ai_aim\src\Utils;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -335,7 +338,7 @@ exit /b %1
 if %errorlevel% neq 0 goto :VCEnd</Command>
     </PostBuildEvent>
     <Link>
-      <AdditionalDependencies>..\..\bin\RelWithDebInfo\imgui.lib;..\..\bin\RelWithDebInfo\minhook.x64.lib;dxgi.lib;opengl32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>..\..\bin\RelWithDebInfo\imgui.lib;..\..\bin\RelWithDebInfo\minhook.x64.lib;dxgi.lib;opengl32.lib;..\..\bin\RelWithDebInfo\Utils.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <DataExecutionPrevention></DataExecutionPrevention>
@@ -418,8 +421,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="C:\Users\AMD\ai_aim\src\Overlay\Memory\GameData.h" />
     <ClCompile Include="C:\Users\AMD\ai_aim\src\Overlay\IPC\SharedMemory.cpp" />
     <ClInclude Include="C:\Users\AMD\ai_aim\src\Overlay\IPC\SharedMemory.h" />
-    <ClCompile Include="C:\Users\AMD\ai_aim\src\Overlay\IPC\NamedPipe.cpp" />
-    <ClInclude Include="C:\Users\AMD\ai_aim\src\Overlay\IPC\NamedPipe.h" />
     <ClCompile Include="C:\Users\AMD\ai_aim\src\Overlay\Renderer\Renderer.cpp" />
     <ClCompile Include="C:\Users\AMD\ai_aim\src\Overlay\UI\Menu.cpp" />
   </ItemGroup>
@@ -430,6 +431,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <Name>ZERO_CHECK</Name>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\AMD\ai_aim\src\Utils\Utils.vcxproj">
+      <Project>{6D0058AB-4CF3-309A-8FFB-5C3D2D7FCFB7}</Project>
+      <Name>Utils</Name>
     </ProjectReference>
     <ProjectReference Include="C:\Users\AMD\ai_aim\libs\dear-imgui\imgui.vcxproj">
       <Project>{01D2909E-D0C7-3154-A1DD-B4615C83C902}</Project>

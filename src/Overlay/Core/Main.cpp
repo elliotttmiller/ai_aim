@@ -7,8 +7,6 @@
 #include <imgui.h>
 #include <imgui_impl_win32.h>
 #include <imgui_impl_opengl3.h>
-#include "../../IPC/NamedPipe.h"
-#include "../../IPC/SharedStructs.h"
 #include "AimAssist/AimAssist.h"
 #include "Memory/GameData.h"
 #include "../../Utils/Logger.h"
@@ -149,12 +147,6 @@ void Main::MainLoop() {
         Core::Cleanup(hdc, hglrc, overlayHwnd);
         return;
     }
-    NamedPipe pipe(IPC_PIPE_NAME);
-    if (!pipe.CreateServer()) {
-         Logger::Get().Log("OverlayCore", "ERROR: Failed to create IPC pipe.");
-         Core::Cleanup(hdc, hglrc, overlayHwnd);
-         return;
-    }
     IpcPacket packet = {};
     RECT lastRect = {}, rect;
     while (Main::g_bRunning) {
@@ -171,14 +163,10 @@ void Main::MainLoop() {
                         rect.right - rect.left, rect.bottom - rect.top, SWP_NOACTIVATE);
             lastRect = rect;
         }
-        if (pipe.Read(&packet, sizeof(packet))) {
-            GameData::GetInstance()->UpdateFromIPC();
-        }
         Core::RenderFrame(rect);
         SwapBuffers(hdc);
         Sleep(1);
     }
-    pipe.Close();
     Core::Cleanup(hdc, hglrc, overlayHwnd);
     Logger::Get().Log("OverlayCore", "MainLoop finished.");
 }

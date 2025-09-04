@@ -1,0 +1,1480 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						9
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Debug-d0094a50bb2071803777.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						11
+					]
+				},
+				{
+					"build" : "libs/raylib/src",
+					"jsonFile" : "directory-libs.raylib.src-Debug-2575704834c25809e4d9.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 1,
+					"source" : "libs/raylib/src",
+					"targetIndexes" : 
+					[
+						1,
+						14
+					]
+				},
+				{
+					"build" : "libs/minhook",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-libs.minhook-Debug-c56f61ad30483e7d5439.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 2,
+					"source" : "libs/minhook",
+					"targetIndexes" : 
+					[
+						2,
+						13
+					]
+				},
+				{
+					"build" : "libs/dear-imgui",
+					"jsonFile" : "directory-libs.dear-imgui-Debug-b057e327d988f57bfab8.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "libs/dear-imgui",
+					"targetIndexes" : 
+					[
+						12
+					]
+				},
+				{
+					"build" : "src/Utils",
+					"jsonFile" : "directory-src.Utils-Debug-c96cf8f2ee78fc8af002.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "src/Utils",
+					"targetIndexes" : 
+					[
+						10
+					]
+				},
+				{
+					"build" : "src/IPC",
+					"jsonFile" : "directory-src.IPC-Debug-e7f492cd0f087405cb53.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 3,
+					"source" : "src/IPC",
+					"targetIndexes" : 
+					[
+						3,
+						5
+					]
+				},
+				{
+					"build" : "src/Overlay",
+					"jsonFile" : "directory-src.Overlay-Debug-5d18b1458a782950f72b.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "src/Overlay",
+					"targetIndexes" : 
+					[
+						9
+					]
+				},
+				{
+					"build" : "src/Injector",
+					"jsonFile" : "directory-src.Injector-Debug-06ba06c612118775ae07.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 4,
+					"source" : "src/Injector",
+					"targetIndexes" : 
+					[
+						4,
+						7
+					]
+				},
+				{
+					"build" : "src/Launcher",
+					"jsonFile" : "directory-src.Launcher-Debug-5962792d98f5ca9f1ff4.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "src/Launcher",
+					"targetIndexes" : 
+					[
+						8
+					]
+				},
+				{
+					"build" : "src/InjectedDLL",
+					"jsonFile" : "directory-src.InjectedDLL-Debug-236514c846679790e170.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "src/InjectedDLL",
+					"targetIndexes" : 
+					[
+						6
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"childIndexes" : 
+					[
+						1,
+						2,
+						3,
+						4
+					],
+					"directoryIndexes" : 
+					[
+						0,
+						3,
+						4,
+						6,
+						8,
+						9
+					],
+					"name" : "ai_aim",
+					"targetIndexes" : 
+					[
+						0,
+						6,
+						8,
+						9,
+						10,
+						11,
+						12
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						1
+					],
+					"name" : "raylib",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						1,
+						14
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						2
+					],
+					"name" : "minhook",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						2,
+						13
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						5
+					],
+					"name" : "IPC",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						3,
+						5
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						7
+					],
+					"name" : "Injector",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						4,
+						7
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "ALL_BUILD::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ALL_BUILD-Debug-ee3acb91a8ebbdf38df4.json",
+					"name" : "ALL_BUILD",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "ALL_BUILD::@e68200293dd0f2d576cc",
+					"jsonFile" : "target-ALL_BUILD-Debug-77fcad706e535de41cec.json",
+					"name" : "ALL_BUILD",
+					"projectIndex" : 1
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "ALL_BUILD::@f600057be3935523e04f",
+					"jsonFile" : "target-ALL_BUILD-Debug-16610d98b4bd46696eea.json",
+					"name" : "ALL_BUILD",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 5,
+					"id" : "ALL_BUILD::@eb3397ea24d93a6187f1",
+					"jsonFile" : "target-ALL_BUILD-Debug-c4d83c1e6643f116c62d.json",
+					"name" : "ALL_BUILD",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 7,
+					"id" : "ALL_BUILD::@8a6b3977ff8aa762fec6",
+					"jsonFile" : "target-ALL_BUILD-Debug-d75ac30a8ba39d6bd231.json",
+					"name" : "ALL_BUILD",
+					"projectIndex" : 4
+				},
+				{
+					"directoryIndex" : 5,
+					"id" : "IPC::@eb3397ea24d93a6187f1",
+					"jsonFile" : "target-IPC-Debug-06c703b47baa10fe7c38.json",
+					"name" : "IPC",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 9,
+					"id" : "InjectedDLL::@e36625c180c06e785299",
+					"jsonFile" : "target-InjectedDLL-Debug-8f2b765cf37ee65156ba.json",
+					"name" : "InjectedDLL",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 7,
+					"id" : "Injector::@8a6b3977ff8aa762fec6",
+					"jsonFile" : "target-Injector-Debug-c38a2b5424668da5d5c7.json",
+					"name" : "Injector",
+					"projectIndex" : 4
+				},
+				{
+					"directoryIndex" : 8,
+					"id" : "Launcher::@e78b4762ace5960a2e28",
+					"jsonFile" : "target-Launcher-Debug-3251a3c1e50c3b4a38df.json",
+					"name" : "Launcher",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 6,
+					"id" : "Overlay::@9538a33318ebbaffa620",
+					"jsonFile" : "target-Overlay-Debug-de8b9a1863b088a35a6d.json",
+					"name" : "Overlay",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 4,
+					"id" : "Utils::@2bf0476c1cf7fa9b5346",
+					"jsonFile" : "target-Utils-Debug-95f65f2510933a10e5f0.json",
+					"name" : "Utils",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ZERO_CHECK-Debug-9d08afb53387aaedb472.json",
+					"name" : "ZERO_CHECK",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "imgui::@da6e21eaf4bb7957c8fa",
+					"jsonFile" : "target-imgui-Debug-e9c8758b200b84be6aba.json",
+					"name" : "imgui",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "minhook::@f600057be3935523e04f",
+					"jsonFile" : "target-minhook-Debug-e39a432fe13966790758.json",
+					"name" : "minhook",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "raylib::@e68200293dd0f2d576cc",
+					"jsonFile" : "target-raylib-Debug-a8a2a12d4660e2f80cac.json",
+					"name" : "raylib",
+					"projectIndex" : 1
+				}
+			]
+		},
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						9
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Release-d0094a50bb2071803777.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						11
+					]
+				},
+				{
+					"build" : "libs/raylib/src",
+					"jsonFile" : "directory-libs.raylib.src-Release-2575704834c25809e4d9.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 1,
+					"source" : "libs/raylib/src",
+					"targetIndexes" : 
+					[
+						1,
+						14
+					]
+				},
+				{
+					"build" : "libs/minhook",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-libs.minhook-Release-b31ff059987f71f6b7d6.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 2,
+					"source" : "libs/minhook",
+					"targetIndexes" : 
+					[
+						2,
+						13
+					]
+				},
+				{
+					"build" : "libs/dear-imgui",
+					"jsonFile" : "directory-libs.dear-imgui-Release-b057e327d988f57bfab8.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "libs/dear-imgui",
+					"targetIndexes" : 
+					[
+						12
+					]
+				},
+				{
+					"build" : "src/Utils",
+					"jsonFile" : "directory-src.Utils-Release-c96cf8f2ee78fc8af002.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "src/Utils",
+					"targetIndexes" : 
+					[
+						10
+					]
+				},
+				{
+					"build" : "src/IPC",
+					"jsonFile" : "directory-src.IPC-Release-e7f492cd0f087405cb53.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 3,
+					"source" : "src/IPC",
+					"targetIndexes" : 
+					[
+						3,
+						5
+					]
+				},
+				{
+					"build" : "src/Overlay",
+					"jsonFile" : "directory-src.Overlay-Release-5d18b1458a782950f72b.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "src/Overlay",
+					"targetIndexes" : 
+					[
+						9
+					]
+				},
+				{
+					"build" : "src/Injector",
+					"jsonFile" : "directory-src.Injector-Release-06ba06c612118775ae07.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 4,
+					"source" : "src/Injector",
+					"targetIndexes" : 
+					[
+						4,
+						7
+					]
+				},
+				{
+					"build" : "src/Launcher",
+					"jsonFile" : "directory-src.Launcher-Release-5962792d98f5ca9f1ff4.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "src/Launcher",
+					"targetIndexes" : 
+					[
+						8
+					]
+				},
+				{
+					"build" : "src/InjectedDLL",
+					"jsonFile" : "directory-src.InjectedDLL-Release-236514c846679790e170.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "src/InjectedDLL",
+					"targetIndexes" : 
+					[
+						6
+					]
+				}
+			],
+			"name" : "Release",
+			"projects" : 
+			[
+				{
+					"childIndexes" : 
+					[
+						1,
+						2,
+						3,
+						4
+					],
+					"directoryIndexes" : 
+					[
+						0,
+						3,
+						4,
+						6,
+						8,
+						9
+					],
+					"name" : "ai_aim",
+					"targetIndexes" : 
+					[
+						0,
+						6,
+						8,
+						9,
+						10,
+						11,
+						12
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						1
+					],
+					"name" : "raylib",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						1,
+						14
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						2
+					],
+					"name" : "minhook",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						2,
+						13
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						5
+					],
+					"name" : "IPC",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						3,
+						5
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						7
+					],
+					"name" : "Injector",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						4,
+						7
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "ALL_BUILD::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ALL_BUILD-Release-ee3acb91a8ebbdf38df4.json",
+					"name" : "ALL_BUILD",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "ALL_BUILD::@e68200293dd0f2d576cc",
+					"jsonFile" : "target-ALL_BUILD-Release-77fcad706e535de41cec.json",
+					"name" : "ALL_BUILD",
+					"projectIndex" : 1
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "ALL_BUILD::@f600057be3935523e04f",
+					"jsonFile" : "target-ALL_BUILD-Release-16610d98b4bd46696eea.json",
+					"name" : "ALL_BUILD",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 5,
+					"id" : "ALL_BUILD::@eb3397ea24d93a6187f1",
+					"jsonFile" : "target-ALL_BUILD-Release-c4d83c1e6643f116c62d.json",
+					"name" : "ALL_BUILD",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 7,
+					"id" : "ALL_BUILD::@8a6b3977ff8aa762fec6",
+					"jsonFile" : "target-ALL_BUILD-Release-d75ac30a8ba39d6bd231.json",
+					"name" : "ALL_BUILD",
+					"projectIndex" : 4
+				},
+				{
+					"directoryIndex" : 5,
+					"id" : "IPC::@eb3397ea24d93a6187f1",
+					"jsonFile" : "target-IPC-Release-e68c8f94c3fd49f51770.json",
+					"name" : "IPC",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 9,
+					"id" : "InjectedDLL::@e36625c180c06e785299",
+					"jsonFile" : "target-InjectedDLL-Release-dedde321880d24c1a938.json",
+					"name" : "InjectedDLL",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 7,
+					"id" : "Injector::@8a6b3977ff8aa762fec6",
+					"jsonFile" : "target-Injector-Release-e81321302bc4a9450604.json",
+					"name" : "Injector",
+					"projectIndex" : 4
+				},
+				{
+					"directoryIndex" : 8,
+					"id" : "Launcher::@e78b4762ace5960a2e28",
+					"jsonFile" : "target-Launcher-Release-a177c6f29f03c5fcfabe.json",
+					"name" : "Launcher",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 6,
+					"id" : "Overlay::@9538a33318ebbaffa620",
+					"jsonFile" : "target-Overlay-Release-f8cc3ba8e1dd987798dd.json",
+					"name" : "Overlay",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 4,
+					"id" : "Utils::@2bf0476c1cf7fa9b5346",
+					"jsonFile" : "target-Utils-Release-f9dd2d07c5249a4db136.json",
+					"name" : "Utils",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ZERO_CHECK-Release-9d08afb53387aaedb472.json",
+					"name" : "ZERO_CHECK",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "imgui::@da6e21eaf4bb7957c8fa",
+					"jsonFile" : "target-imgui-Release-f4b8baefd509a047e7fb.json",
+					"name" : "imgui",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "minhook::@f600057be3935523e04f",
+					"jsonFile" : "target-minhook-Release-6da31527721c4443c78f.json",
+					"name" : "minhook",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "raylib::@e68200293dd0f2d576cc",
+					"jsonFile" : "target-raylib-Release-ece4bf32936ec4309aa4.json",
+					"name" : "raylib",
+					"projectIndex" : 1
+				}
+			]
+		},
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						9
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-MinSizeRel-d0094a50bb2071803777.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						11
+					]
+				},
+				{
+					"build" : "libs/raylib/src",
+					"jsonFile" : "directory-libs.raylib.src-MinSizeRel-2575704834c25809e4d9.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 1,
+					"source" : "libs/raylib/src",
+					"targetIndexes" : 
+					[
+						1,
+						14
+					]
+				},
+				{
+					"build" : "libs/minhook",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-libs.minhook-MinSizeRel-98575cbb5e7b02ee0091.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 2,
+					"source" : "libs/minhook",
+					"targetIndexes" : 
+					[
+						2,
+						13
+					]
+				},
+				{
+					"build" : "libs/dear-imgui",
+					"jsonFile" : "directory-libs.dear-imgui-MinSizeRel-b057e327d988f57bfab8.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "libs/dear-imgui",
+					"targetIndexes" : 
+					[
+						12
+					]
+				},
+				{
+					"build" : "src/Utils",
+					"jsonFile" : "directory-src.Utils-MinSizeRel-c96cf8f2ee78fc8af002.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "src/Utils",
+					"targetIndexes" : 
+					[
+						10
+					]
+				},
+				{
+					"build" : "src/IPC",
+					"jsonFile" : "directory-src.IPC-MinSizeRel-e7f492cd0f087405cb53.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 3,
+					"source" : "src/IPC",
+					"targetIndexes" : 
+					[
+						3,
+						5
+					]
+				},
+				{
+					"build" : "src/Overlay",
+					"jsonFile" : "directory-src.Overlay-MinSizeRel-5d18b1458a782950f72b.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "src/Overlay",
+					"targetIndexes" : 
+					[
+						9
+					]
+				},
+				{
+					"build" : "src/Injector",
+					"jsonFile" : "directory-src.Injector-MinSizeRel-06ba06c612118775ae07.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 4,
+					"source" : "src/Injector",
+					"targetIndexes" : 
+					[
+						4,
+						7
+					]
+				},
+				{
+					"build" : "src/Launcher",
+					"jsonFile" : "directory-src.Launcher-MinSizeRel-5962792d98f5ca9f1ff4.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "src/Launcher",
+					"targetIndexes" : 
+					[
+						8
+					]
+				},
+				{
+					"build" : "src/InjectedDLL",
+					"jsonFile" : "directory-src.InjectedDLL-MinSizeRel-236514c846679790e170.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "src/InjectedDLL",
+					"targetIndexes" : 
+					[
+						6
+					]
+				}
+			],
+			"name" : "MinSizeRel",
+			"projects" : 
+			[
+				{
+					"childIndexes" : 
+					[
+						1,
+						2,
+						3,
+						4
+					],
+					"directoryIndexes" : 
+					[
+						0,
+						3,
+						4,
+						6,
+						8,
+						9
+					],
+					"name" : "ai_aim",
+					"targetIndexes" : 
+					[
+						0,
+						6,
+						8,
+						9,
+						10,
+						11,
+						12
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						1
+					],
+					"name" : "raylib",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						1,
+						14
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						2
+					],
+					"name" : "minhook",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						2,
+						13
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						5
+					],
+					"name" : "IPC",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						3,
+						5
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						7
+					],
+					"name" : "Injector",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						4,
+						7
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "ALL_BUILD::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ALL_BUILD-MinSizeRel-ee3acb91a8ebbdf38df4.json",
+					"name" : "ALL_BUILD",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "ALL_BUILD::@e68200293dd0f2d576cc",
+					"jsonFile" : "target-ALL_BUILD-MinSizeRel-77fcad706e535de41cec.json",
+					"name" : "ALL_BUILD",
+					"projectIndex" : 1
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "ALL_BUILD::@f600057be3935523e04f",
+					"jsonFile" : "target-ALL_BUILD-MinSizeRel-16610d98b4bd46696eea.json",
+					"name" : "ALL_BUILD",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 5,
+					"id" : "ALL_BUILD::@eb3397ea24d93a6187f1",
+					"jsonFile" : "target-ALL_BUILD-MinSizeRel-c4d83c1e6643f116c62d.json",
+					"name" : "ALL_BUILD",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 7,
+					"id" : "ALL_BUILD::@8a6b3977ff8aa762fec6",
+					"jsonFile" : "target-ALL_BUILD-MinSizeRel-d75ac30a8ba39d6bd231.json",
+					"name" : "ALL_BUILD",
+					"projectIndex" : 4
+				},
+				{
+					"directoryIndex" : 5,
+					"id" : "IPC::@eb3397ea24d93a6187f1",
+					"jsonFile" : "target-IPC-MinSizeRel-df309cb5911d7bf9300a.json",
+					"name" : "IPC",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 9,
+					"id" : "InjectedDLL::@e36625c180c06e785299",
+					"jsonFile" : "target-InjectedDLL-MinSizeRel-6cbc11a296b1cba2fb5a.json",
+					"name" : "InjectedDLL",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 7,
+					"id" : "Injector::@8a6b3977ff8aa762fec6",
+					"jsonFile" : "target-Injector-MinSizeRel-84bfe5ce4a35912f112b.json",
+					"name" : "Injector",
+					"projectIndex" : 4
+				},
+				{
+					"directoryIndex" : 8,
+					"id" : "Launcher::@e78b4762ace5960a2e28",
+					"jsonFile" : "target-Launcher-MinSizeRel-1da5d8c90c88b69204b3.json",
+					"name" : "Launcher",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 6,
+					"id" : "Overlay::@9538a33318ebbaffa620",
+					"jsonFile" : "target-Overlay-MinSizeRel-4b366b4bb8126d4534dc.json",
+					"name" : "Overlay",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 4,
+					"id" : "Utils::@2bf0476c1cf7fa9b5346",
+					"jsonFile" : "target-Utils-MinSizeRel-af0acd1057e757bafabb.json",
+					"name" : "Utils",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ZERO_CHECK-MinSizeRel-9d08afb53387aaedb472.json",
+					"name" : "ZERO_CHECK",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "imgui::@da6e21eaf4bb7957c8fa",
+					"jsonFile" : "target-imgui-MinSizeRel-6a6b0f0578787cd0738d.json",
+					"name" : "imgui",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "minhook::@f600057be3935523e04f",
+					"jsonFile" : "target-minhook-MinSizeRel-56a37646b3c96f400abf.json",
+					"name" : "minhook",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "raylib::@e68200293dd0f2d576cc",
+					"jsonFile" : "target-raylib-MinSizeRel-5324bad1655f1c59f1c3.json",
+					"name" : "raylib",
+					"projectIndex" : 1
+				}
+			]
+		},
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						9
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-RelWithDebInfo-d0094a50bb2071803777.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						11
+					]
+				},
+				{
+					"build" : "libs/raylib/src",
+					"jsonFile" : "directory-libs.raylib.src-RelWithDebInfo-2575704834c25809e4d9.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 1,
+					"source" : "libs/raylib/src",
+					"targetIndexes" : 
+					[
+						1,
+						14
+					]
+				},
+				{
+					"build" : "libs/minhook",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-libs.minhook-RelWithDebInfo-a502e29e45703f958708.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 2,
+					"source" : "libs/minhook",
+					"targetIndexes" : 
+					[
+						2,
+						13
+					]
+				},
+				{
+					"build" : "libs/dear-imgui",
+					"jsonFile" : "directory-libs.dear-imgui-RelWithDebInfo-b057e327d988f57bfab8.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "libs/dear-imgui",
+					"targetIndexes" : 
+					[
+						12
+					]
+				},
+				{
+					"build" : "src/Utils",
+					"jsonFile" : "directory-src.Utils-RelWithDebInfo-c96cf8f2ee78fc8af002.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "src/Utils",
+					"targetIndexes" : 
+					[
+						10
+					]
+				},
+				{
+					"build" : "src/IPC",
+					"jsonFile" : "directory-src.IPC-RelWithDebInfo-e7f492cd0f087405cb53.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 3,
+					"source" : "src/IPC",
+					"targetIndexes" : 
+					[
+						3,
+						5
+					]
+				},
+				{
+					"build" : "src/Overlay",
+					"jsonFile" : "directory-src.Overlay-RelWithDebInfo-5d18b1458a782950f72b.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "src/Overlay",
+					"targetIndexes" : 
+					[
+						9
+					]
+				},
+				{
+					"build" : "src/Injector",
+					"jsonFile" : "directory-src.Injector-RelWithDebInfo-06ba06c612118775ae07.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 4,
+					"source" : "src/Injector",
+					"targetIndexes" : 
+					[
+						4,
+						7
+					]
+				},
+				{
+					"build" : "src/Launcher",
+					"jsonFile" : "directory-src.Launcher-RelWithDebInfo-5962792d98f5ca9f1ff4.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "src/Launcher",
+					"targetIndexes" : 
+					[
+						8
+					]
+				},
+				{
+					"build" : "src/InjectedDLL",
+					"jsonFile" : "directory-src.InjectedDLL-RelWithDebInfo-236514c846679790e170.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "src/InjectedDLL",
+					"targetIndexes" : 
+					[
+						6
+					]
+				}
+			],
+			"name" : "RelWithDebInfo",
+			"projects" : 
+			[
+				{
+					"childIndexes" : 
+					[
+						1,
+						2,
+						3,
+						4
+					],
+					"directoryIndexes" : 
+					[
+						0,
+						3,
+						4,
+						6,
+						8,
+						9
+					],
+					"name" : "ai_aim",
+					"targetIndexes" : 
+					[
+						0,
+						6,
+						8,
+						9,
+						10,
+						11,
+						12
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						1
+					],
+					"name" : "raylib",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						1,
+						14
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						2
+					],
+					"name" : "minhook",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						2,
+						13
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						5
+					],
+					"name" : "IPC",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						3,
+						5
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						7
+					],
+					"name" : "Injector",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						4,
+						7
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "ALL_BUILD::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ALL_BUILD-RelWithDebInfo-ee3acb91a8ebbdf38df4.json",
+					"name" : "ALL_BUILD",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "ALL_BUILD::@e68200293dd0f2d576cc",
+					"jsonFile" : "target-ALL_BUILD-RelWithDebInfo-77fcad706e535de41cec.json",
+					"name" : "ALL_BUILD",
+					"projectIndex" : 1
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "ALL_BUILD::@f600057be3935523e04f",
+					"jsonFile" : "target-ALL_BUILD-RelWithDebInfo-16610d98b4bd46696eea.json",
+					"name" : "ALL_BUILD",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 5,
+					"id" : "ALL_BUILD::@eb3397ea24d93a6187f1",
+					"jsonFile" : "target-ALL_BUILD-RelWithDebInfo-c4d83c1e6643f116c62d.json",
+					"name" : "ALL_BUILD",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 7,
+					"id" : "ALL_BUILD::@8a6b3977ff8aa762fec6",
+					"jsonFile" : "target-ALL_BUILD-RelWithDebInfo-d75ac30a8ba39d6bd231.json",
+					"name" : "ALL_BUILD",
+					"projectIndex" : 4
+				},
+				{
+					"directoryIndex" : 5,
+					"id" : "IPC::@eb3397ea24d93a6187f1",
+					"jsonFile" : "target-IPC-RelWithDebInfo-021d7a2bfa9f28ed1c41.json",
+					"name" : "IPC",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 9,
+					"id" : "InjectedDLL::@e36625c180c06e785299",
+					"jsonFile" : "target-InjectedDLL-RelWithDebInfo-347abe43465e4f958cf6.json",
+					"name" : "InjectedDLL",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 7,
+					"id" : "Injector::@8a6b3977ff8aa762fec6",
+					"jsonFile" : "target-Injector-RelWithDebInfo-790a17349b398089d443.json",
+					"name" : "Injector",
+					"projectIndex" : 4
+				},
+				{
+					"directoryIndex" : 8,
+					"id" : "Launcher::@e78b4762ace5960a2e28",
+					"jsonFile" : "target-Launcher-RelWithDebInfo-5d3df357f04eb4aeed82.json",
+					"name" : "Launcher",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 6,
+					"id" : "Overlay::@9538a33318ebbaffa620",
+					"jsonFile" : "target-Overlay-RelWithDebInfo-1b1ee82c46a998803a90.json",
+					"name" : "Overlay",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 4,
+					"id" : "Utils::@2bf0476c1cf7fa9b5346",
+					"jsonFile" : "target-Utils-RelWithDebInfo-f4328647e7215cc4a984.json",
+					"name" : "Utils",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ZERO_CHECK-RelWithDebInfo-9d08afb53387aaedb472.json",
+					"name" : "ZERO_CHECK",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "imgui::@da6e21eaf4bb7957c8fa",
+					"jsonFile" : "target-imgui-RelWithDebInfo-74363156df089128635d.json",
+					"name" : "imgui",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "minhook::@f600057be3935523e04f",
+					"jsonFile" : "target-minhook-RelWithDebInfo-745252aed3a7c3254608.json",
+					"name" : "minhook",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "raylib::@e68200293dd0f2d576cc",
+					"jsonFile" : "target-raylib-RelWithDebInfo-5478c2e91110d04379d2.json",
+					"name" : "raylib",
+					"projectIndex" : 1
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "C:/Users/AMD/ai_aim/build",
+		"source" : "C:/Users/AMD/ai_aim"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 8
+	}
+}

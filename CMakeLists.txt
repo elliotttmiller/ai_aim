@@ -1,23 +1,45 @@
-cmake_minimum_required(VERSION 3.15)
-project(ExternalAimAssist)
+cmake_minimum_required(VERSION 3.16)
+project(ai_aim)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
-add_library(d3d12helpers INTERFACE)
-target_include_directories(d3d12helpers INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/libs/d3d12helpers/include)
+# Build raylib (includes GLFW)
+add_subdirectory(libs/raylib/src)
 
+# Build minhook
 add_subdirectory(libs/minhook)
-add_subdirectory(libs/raylib)
+
+# Build dear-imgui
 add_subdirectory(libs/dear-imgui)
-add_subdirectory(src/AimTrainer)
-add_subdirectory(src/Launcher)
-add_subdirectory(src/Injector)
+
+# Build Utils and IPC modules if they have their own CMakeLists.txt
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/Utils/CMakeLists.txt")
+    add_subdirectory(src/Utils)
+endif()
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/IPC/CMakeLists.txt")
+    add_subdirectory(src/IPC)
+endif()
+
+# Build Overlay
 add_subdirectory(src/Overlay)
-add_subdirectory(src/Utils)
-add_subdirectory(src/InjectedDLL)
-add_subdirectory(src/IPC)
+
+# Build Injector
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/Injector/CMakeLists.txt")
+    add_subdirectory(src/Injector)
+endif()
+
+# Build Launcher
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/Launcher/CMakeLists.txt")
+    add_subdirectory(src/Launcher)
+endif()
+
+# Build InjectedDLL
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/InjectedDLL/CMakeLists.txt")
+    add_subdirectory(src/InjectedDLL)
+endif()

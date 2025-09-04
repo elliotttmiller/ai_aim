@@ -6,10 +6,8 @@ add_library(Overlay SHARED
     Input/InputManager.cpp
     Memory/GameData.cpp
     Memory/GameData.h
-    ../../IPC/SharedMemory.cpp
-    ../../IPC/SharedMemory.h
-    ../../IPC/NamedPipe.cpp
-    ../../IPC/NamedPipe.h
+    IPC/SharedMemory.cpp
+    IPC/SharedMemory.h
     Renderer/Renderer.cpp
     UI/Menu.cpp
 )
@@ -26,7 +24,7 @@ set_target_properties(Overlay PROPERTIES
 
 # Enable strict warnings and treat warnings as errors in Debug
 if(MSVC)
-    target_compile_options(Overlay PRIVATE /W4 $<$<CONFIG:Debug>:/WX>)
+    target_compile_options(Overlay PRIVATE /W4 /WX /EHsc)
 else()
     target_compile_options(Overlay PRIVATE -Wall -Wextra -pedantic $<$<CONFIG:Debug>:-Werror>)
 endif()

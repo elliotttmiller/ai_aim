@@ -5,7 +5,6 @@
 #include <filesystem>
 #include <fstream>
 #include "../Overlay/IPC/SharedMemory.h"
-#include "../IPC/NamedPipe.h"
 #include "../Utils/Logger.h"
 #include "c:/Users/AMD/ai_aim/src/Utils/StringConvert.h"
 #include <tlhelp32.h>
@@ -101,15 +100,6 @@ int main(int /*argc*/, char** /*argv*/) {
     }
     Logger::Get().Log("Injector", "Process found! PID: " + std::to_string(procId));
     Logger::Get().Log("Injector", "Injecting DLL: " + WStringToString(fullDllPath));
-    // Create IPC channel (NamedPipe)
-    NamedPipe pipe(IPC_PIPE_NAME);
-    bool ipcOk = pipe.CreateServer();
-    if (!IPC::SharedMemory::Create() && !ipcOk) {
-        Logger::Get().Log("Injector", "[Injector] Failed to create IPC channel!");
-        return 1;
-    }
-    Logger::Get().Log("Injector", "[Injector] IPC channel created. Ready for DLL and overlay.");
-
     // DLL Injection (Manual)
     HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, procId);
     if (!hProcess) {
