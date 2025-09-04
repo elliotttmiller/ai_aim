@@ -2,6 +2,7 @@ add_library(Utils
     Logger.cpp 
     GameDetection.cpp
     UniversalConfig.cpp
+    UniversalMemoryScanner.cpp
     StringConvert.h
 )
 target_include_directories(Utils PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
