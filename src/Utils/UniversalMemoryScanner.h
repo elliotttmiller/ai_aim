@@ -6,6 +6,7 @@
 #include <functional>
 #include <unordered_map>
 #include <chrono>
+#include <cmath>
 
 #ifdef _WIN32
     #include <Windows.h>
@@ -77,9 +78,33 @@ struct MemoryAddress {
 #ifndef VEC3_DEFINED
 #define VEC3_DEFINED
 struct Vec3 {
-    float x, y, z;
-    Vec3() : x(0), y(0), z(0) {}
+    float x = 0.0f, y = 0.0f, z = 0.0f;
+    
+    Vec3() = default;
     Vec3(float x_, float y_, float z_) : x(x_), y(y_), z(z_) {}
+    
+    // Mathematical operators
+    Vec3 operator+(const Vec3& other) const { return Vec3(x + other.x, y + other.y, z + other.z); }
+    Vec3 operator-(const Vec3& other) const { return Vec3(x - other.x, y - other.y, z - other.z); }
+    Vec3 operator*(float scalar) const { return Vec3(x * scalar, y * scalar, z * scalar); }
+    Vec3& operator+=(const Vec3& other) { x += other.x; y += other.y; z += other.z; return *this; }
+    Vec3& operator-=(const Vec3& other) { x -= other.x; y -= other.y; z -= other.z; return *this; }
+    Vec3& operator*=(float scalar) { x *= scalar; y *= scalar; z *= scalar; return *this; }
+    
+    // Utility functions
+    float Length() const { return std::sqrt(x * x + y * y + z * z); }
+    float LengthSquared() const { return x * x + y * y + z * z; }
+    float Distance(const Vec3& other) const { return (*this - other).Length(); }
+    Vec3 Normalize() const { 
+        float len = Length(); 
+        return len > 0.001f ? (*this * (1.0f / len)) : Vec3(); 
+    }
+    
+    // Dot and cross products
+    float Dot(const Vec3& other) const { return x * other.x + y * other.y + z * other.z; }
+    Vec3 Cross(const Vec3& other) const { 
+        return Vec3(y * other.z - z * other.y, z * other.x - x * other.z, x * other.y - y * other.x); 
+    }
 };
 #endif
 
@@ -112,7 +137,12 @@ struct UniversalEntity {
 
 class UniversalMemoryScanner {
 public:
+public:
     static UniversalMemoryScanner& GetInstance();
+    
+    // Constructor and destructor - public for make_unique compatibility
+    UniversalMemoryScanner() = default;
+    ~UniversalMemoryScanner(); // Implemented in .cpp file
     
     // Initialization and configuration
     bool Initialize(); // Auto-detect current process
@@ -162,8 +192,8 @@ public:
     void ClearCache();
     
 private:
-    UniversalMemoryScanner() = default;
-    ~UniversalMemoryScanner();
+    // Constructor and destructor - made public for make_unique compatibility
+    // Constructor moved to public section
     
     // Process management
     bool OpenTargetProcess(DWORD processId);

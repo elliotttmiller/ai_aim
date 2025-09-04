@@ -3,6 +3,7 @@ add_library(Utils
     GameDetection.cpp
     UniversalConfig.cpp
     UniversalMemoryScanner.cpp
+    UnifiedAimAssist.cpp
     StringConvert.h
 )
 target_include_directories(Utils PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

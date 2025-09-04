@@ -8,10 +8,12 @@
 #ifdef _WIN32
     #include <Windows.h>
     #include <tlhelp32.h>
+    typedef HWND WindowHandle;
 #else
     // Cross-platform types for development
     typedef unsigned long DWORD;
     typedef void* HANDLE;
+    typedef void* WindowHandle;  // Generic window handle type
     #define INVALID_HANDLE_VALUE ((HANDLE)-1)
 #endif
 
@@ -135,7 +137,7 @@ private:
     std::wstring GetProcessPath(DWORD processId);
     std::wstring GetWindowTitle(DWORD processId);
     bool Is64BitProcess(DWORD processId);
-    HWND FindMainWindow(DWORD processId);
+    WindowHandle FindMainWindow(DWORD processId);
     
     // Monitoring
     bool m_isMonitoring = false;

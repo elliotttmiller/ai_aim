@@ -28,7 +28,9 @@ UniversalMemoryScanner& UniversalMemoryScanner::GetInstance() {
 }
 
 UniversalMemoryScanner::~UniversalMemoryScanner() {
-    CloseTargetProcess();
+    if (m_processHandle != nullptr) {
+        CloseTargetProcess();
+    }
 }
 
 bool UniversalMemoryScanner::Initialize() {

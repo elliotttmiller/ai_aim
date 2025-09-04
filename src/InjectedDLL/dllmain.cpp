@@ -106,6 +106,7 @@ DWORD WINAPI MainThread(HMODULE hModule) {
 
     Logger::Get().Log("InjectedDLL", "Overlay shutdown complete. Detaching from process.");
     FreeLibraryAndExitThread(hModule, 0);
+    return 0; // This line won't be reached but satisfies compiler
 }
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID) {

@@ -367,10 +367,12 @@ bool UniversalGameDetector::IsGameProcess(DWORD processId) {
     }
     
     // 4. Check for a visible window as an indicator of a foreground application (like a game)
-    HWND hWnd = FindMainWindow(processId);
-    if (IsWindowVisible(hWnd)) {
+#ifdef _WIN32
+    WindowHandle hWnd = FindMainWindow(processId);
+    if (hWnd && IsWindowVisible((HWND)hWnd)) {
         return true;
     }
+#endif
 
     return false;
 }
@@ -419,6 +421,7 @@ bool UniversalGameDetector::Is64BitProcess(DWORD processId) {
     return false; // Default to false if we can't determine
 }
 
+#ifdef _WIN32
 struct EnumData {
     DWORD processId;
     HWND mainWindow;
@@ -434,13 +437,19 @@ BOOL CALLBACK EnumWindowsCallback(HWND handle, LPARAM lParam) {
     }
     return TRUE; // Continue enumerating
 }
+#endif
 
-HWND UniversalGameDetector::FindMainWindow(DWORD processId) {
+WindowHandle UniversalGameDetector::FindMainWindow(DWORD processId) {
+#ifdef _WIN32
     EnumData data;
     data.processId = processId;
     data.mainWindow = NULL;
     EnumWindows(EnumWindowsCallback, (LPARAM)&data);
     return data.mainWindow;
+#else
+    (void)processId; // Suppress unused parameter warning
+    return nullptr; // Cross-platform stub
+#endif
 }
 
 GameInfo UniversalGameDetector::GetBestInjectionTarget() {

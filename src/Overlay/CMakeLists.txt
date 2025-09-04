@@ -1,6 +1,6 @@
 # src/Overlay/CMakeLists.txt
 add_library(Overlay STATIC
-    AimAssist/UniversalAimAssist.cpp
+    UnifiedOverlay.cpp
 )
 
 # Set output directory for all configs
