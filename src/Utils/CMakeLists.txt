@@ -1,4 +1,9 @@
-add_library(Utils Logger.cpp StringConvert.h)
+add_library(Utils 
+    Logger.cpp 
+    GameDetection.cpp
+    UniversalConfig.cpp
+    StringConvert.h
+)
 target_include_directories(Utils PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 set_target_properties(Utils PROPERTIES 
     RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/bin/Debug
@@ -6,6 +11,12 @@ set_target_properties(Utils PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/bin/Debug
     ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/bin/Release
 )
+
+# Add system libraries for Windows API calls in cross-platform way
+if(WIN32)
+    target_link_libraries(Utils PRIVATE psapi)
+endif()
+
 if(MSVC)
     target_compile_options(Utils PRIVATE /W4 /WX /EHsc)
 else()
