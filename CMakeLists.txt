@@ -41,12 +41,12 @@ endfunction()
 # add_subdirectory(libs/raylib)
 
 # Build minhook (Windows-specific - disable for cross-platform development)
-if(WIN32)
-    add_subdirectory(libs/minhook)
-endif()
+# if(WIN32)
+#     add_subdirectory(libs/minhook)
+# endif()
 
 # Build dear-imgui
-add_subdirectory(libs/dear-imgui)
+# add_subdirectory(libs/dear-imgui)
 
 # Build Utils and IPC modules if they have their own CMakeLists.txt
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/Utils/CMakeLists.txt")
