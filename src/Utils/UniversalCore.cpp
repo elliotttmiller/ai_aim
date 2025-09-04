@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <fstream>
 #include <sstream>
+#include <type_traits>
 
 namespace UniversalCore {
     namespace PathUtils {
@@ -104,81 +105,6 @@ namespace UniversalCore {
             auto basePath = GetExecutableDirectory();
             return std::filesystem::weakly_canonical(basePath + L"/" + relativePath).wstring();
         }
-    }
-    
-    // ConfigStore implementation
-    template<>
-    std::string ConfigStore::GetValue<std::string>(const std::string& key, const std::string& defaultValue) const {
-        std::lock_guard<std::recursive_mutex> lock(m_mutex);
-        auto it = m_config.find(key);
-        return (it != m_config.end()) ? it->second : defaultValue;
-    }
-    
-    template<>
-    int ConfigStore::GetValue<int>(const std::string& key, const int& defaultValue) const {
-        std::lock_guard<std::recursive_mutex> lock(m_mutex);
-        auto it = m_config.find(key);
-        if (it != m_config.end()) {
-            try {
-                return std::stoi(it->second);
-            } catch (...) {
-                Logger::Get().Log("UniversalCore", "Failed to parse int value for key: " + key);
-            }
-        }
-        return defaultValue;
-    }
-    
-    template<>
-    float ConfigStore::GetValue<float>(const std::string& key, const float& defaultValue) const {
-        std::lock_guard<std::recursive_mutex> lock(m_mutex);
-        auto it = m_config.find(key);
-        if (it != m_config.end()) {
-            try {
-                return std::stof(it->second);
-            } catch (...) {
-                Logger::Get().Log("UniversalCore", "Failed to parse float value for key: " + key);
-            }
-        }
-        return defaultValue;
-    }
-    
-    template<>
-    bool ConfigStore::GetValue<bool>(const std::string& key, const bool& defaultValue) const {
-        std::lock_guard<std::recursive_mutex> lock(m_mutex);
-        auto it = m_config.find(key);
-        if (it != m_config.end()) {
-            const std::string& value = it->second;
-            return value == "true" || value == "1" || value == "yes";
-        }
-        return defaultValue;
-    }
-    
-    template<>
-    void ConfigStore::SetValue<std::string>(const std::string& key, const std::string& value) {
-        std::lock_guard<std::recursive_mutex> lock(m_mutex);
-        m_config[key] = value;
-        NotifyCallbacks(key);
-    }
-    
-    template<>
-    void ConfigStore::SetValue<int>(const std::string& key, const int& value) {
-        std::lock_guard<std::recursive_mutex> lock(m_mutex);
-        m_config[key] = std::to_string(value);
-        NotifyCallbacks(key);
-    }
-    
-    template<>
-    void ConfigStore::SetValue<float>(const std::string& key, const float& value) {
-        std::lock_guard<std::recursive_mutex> lock(m_mutex);
-        m_config[key] = std::to_string(value);
-        NotifyCallbacks(key);
-    }
-    
-    template<>
-    void ConfigStore::SetValue<bool>(const std::string& key, const bool& value) {
-        std::lock_guard<std::recursive_mutex> lock(m_mutex);
-        m_config[key] = value ? "true" : "false";
-        NotifyCallbacks(key);
     }
     
     bool ConfigStore::LoadFromFile(const std::wstring& filepath) {

@@ -7,6 +7,14 @@
 #include <vector>
 #include <chrono>
 #include <functional>
+#include <sstream>
+#include <type_traits>
+
+// Forward declare StringUtils to avoid circular dependency
+namespace StringUtils {
+    std::string WideToUTF8(const std::wstring& wstr);
+    std::wstring UTF8ToWide(const std::string& str);
+}
 
 #ifdef _WIN32
     #include <Windows.h>
@@ -199,4 +207,55 @@ namespace UniversalCore {
         
         void NotifyCallbacks(const std::string& key);
     };
+    
+    // Template implementations for ConfigStore
+    template<typename T>  
+    T ConfigStore::GetValue(const std::string& key, const T& defaultValue) const {
+        std::lock_guard<std::recursive_mutex> lock(m_mutex);
+        auto it = m_config.find(key);
+        if (it != m_config.end()) {
+            try {
+                if constexpr (std::is_same_v<T, std::string>) {
+                    return it->second;
+                } else if constexpr (std::is_same_v<T, int>) {
+                    return std::stoi(it->second);
+                } else if constexpr (std::is_same_v<T, float>) {
+                    return std::stof(it->second);
+                } else if constexpr (std::is_same_v<T, bool>) {
+                    return it->second == "true" || it->second == "1";
+                } else if constexpr (std::is_same_v<T, std::wstring>) {
+                    return StringUtils::UTF8ToWide(it->second);
+                } else {
+                    // For other types, try stream extraction
+                    std::istringstream iss(it->second);
+                    T value;
+                    iss >> value;
+                    return value;
+                }
+            } catch (...) {
+                // Return default value on conversion failure
+            }
+        }
+        return defaultValue;
+    }
+    
+    template<typename T>
+    void ConfigStore::SetValue(const std::string& key, const T& value) {
+        std::lock_guard<std::recursive_mutex> lock(m_mutex);
+        if constexpr (std::is_same_v<T, std::string>) {
+            m_config[key] = value;
+        } else if constexpr (std::is_same_v<T, bool>) {
+            m_config[key] = value ? "true" : "false";
+        } else if constexpr (std::is_same_v<T, std::wstring>) {
+            m_config[key] = StringUtils::WideToUTF8(value);
+        } else if constexpr (std::is_convertible_v<T, std::string>) {
+            m_config[key] = std::string(value);
+        } else {
+            // For other types, use stringstream
+            std::ostringstream oss;
+            oss << value;
+            m_config[key] = oss.str();
+        }
+        NotifyCallbacks(key);
+    }
 }
