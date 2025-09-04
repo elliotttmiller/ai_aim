@@ -1,6 +1,6 @@
 # ai_aim: Universal Autonomous Game Overlay & Integration System
 
-**Version:** 1.0.0 (September 2025)
+**Version:** 1.1.0 (December 2024)
 
 ## Overview
 
@@ -20,45 +20,52 @@ ai_aim/
 │   └── game_memory.cfg # Memory layout/config for overlay/IPC
 ├── libs/               # External dependencies (submodules)
 │   ├── dear-imgui/     # ImGui GUI library
-│   ├── minhook/        # MinHook for function hooking
+│  │   ├── minhook/        # MinHook for function hooking
 │   └── raylib/         # Raylib graphics library
-├── out/                # CMake and build system output
 ├── src/                # All source code
-│   ├── AimTrainer/     # Standalone FPS aim trainer
+│   ├── AimTrainer/     # Standalone FPS aim trainer (test app)
 │   │   ├── main.cpp    # Main game logic and entry point
-│   │   └── ...         # Project files, CMake, filters
+│   │   └── CMakeLists.txt
+│   ├── InjectedDLL/    # Legacy DLL for testing injection
+│   │   ├── dllmain.cpp # Simple DLL entry point
+│   │   └── CMakeLists.txt
 │   ├── Injector/       # DLL injector for overlay
 │   │   ├── main.cpp    # Injector logic and IPC setup
-│   │   └── ...         # Project files, CMake, filters
-│   ├── IPC/            # Shared IPC code
-│   │   ├── NamedPipe.cpp/.h   # Named pipe IPC implementation
-│   │   ├── SharedMemory.cpp/.h# Shared memory IPC implementation
+│   │   └── CMakeLists.txt
+│   ├── IPC/            # Shared IPC code (shared memory only)
+│   │   ├── SharedMemory.cpp/.h    # Shared memory IPC implementation
+│   │   ├── SharedStructs.h        # IPC data structures
+│   │   └── CMakeLists.txt
 │   ├── Launcher/       # Orchestrates workflow, launches and injects
 │   │   ├── Launcher.cpp# Main launcher logic
-│   │   └── ...         # Project files, CMake, filters
-│   ├── Overlay/        # Overlay DLL (aim assist, UI, hooks)
+│   │   └── CMakeLists.txt
+│   ├── Overlay/        # Main overlay DLL (aim assist, UI, hooks)
 │   │   ├── Core/       # DLL entry, main loop
 │   │   │   ├── DllMain.cpp    # DLL entry point, error handling, logging
 │   │   │   ├── Main.cpp/.h    # Overlay main loop, ImGui, hooks
 │   │   ├── AimAssist/  # Aim assist logic
 │   │   │   ├── AimAssist.cpp/.h # Target detection, aim logic
-│   │   ├── Hooks/      # Graphics API hooks
-│   │   │   ├── D3D11Hook.cpp/.h # Direct3D 11 hook implementation
 │   │   ├── Input/      # Input management
 │   │   │   ├── InputManager.cpp/.h # Keyboard/mouse input
 │   │   ├── IPC/        # Overlay-side IPC
-│   │   │   ├── NamedPipe.cpp/.h
-│   │   │   ├── SharedMemory.cpp/.h
+│   │   │   ├── SharedMemory.cpp/.h # Shared memory communication
 │   │   ├── Memory/     # Game memory scanning
-│   │   │   ├── GameData.cpp/.h    # Scans and exposes game data
+│   │   │   ├── GameData.h     # Game data structures and scanning
 │   │   ├── Renderer/   # Overlay rendering
 │   │   │   ├── Renderer.cpp/.h    # Custom rendering logic
 │   │   ├── UI/         # Overlay UI (ImGui menus)
 │   │   │   ├── Menu.cpp/.h        # Menu and UI logic
 │   │   ├── Utils/      # Utility code
 │   │   │   ├── Singleton.h        # Singleton pattern helper
-│   │   └── ...         # Project files, CMake, filters
+│   │   └── CMakeLists.txt
+│   └── Utils/          # Shared utility code
+│       ├── Logger.cpp/.h      # Unified logging system
+│       ├── Singleton.h        # Singleton pattern helper
+│       ├── StringConvert.h    # String conversion utilities
+│       └── CMakeLists.txt
+├── x64/                # Visual Studio build artifacts
 ├── .gitignore          # Excludes build, IDE, and log files
+├── .gitmodules         # Git submodule configuration
 ├── CMakeLists.txt      # Top-level CMake build configuration
 └── README.md           # Project documentation (this file)
 ```
@@ -75,22 +82,25 @@ ai_aim/
 
 ### 2. Injector (`Injector.exe`)
 - Finds the target game process and injects the overlay DLL (`Overlay.dll`) using configurable methods (SetWindowsHookEx, CreateRemoteThread, etc.).
-- Sets up IPC channels (named pipes/shared memory) for communication between overlay and game.
+- Sets up shared memory IPC channels for high-performance communication between overlay and game.
 - Logs all injection and IPC setup events to `bin/debug.log`.
 
 ### 3. Overlay DLL (`Overlay.dll`)
 - Injected into any game process, starts in `DllMain.cpp`.
-- Main loop (`Main.cpp`) sets up ImGui, hooks graphics API (D3D11), and manages overlay rendering.
-- Custom logic modules (aim assist, analytics, UI, etc.) scan game memory, detect targets/events, and apply algorithms.
-- IPC modules exchange data with the game for real-time overlay and integration.
+- Main loop (`Main.cpp`) sets up ImGui, manages overlay rendering, and coordinates all modules.
+- Modular architecture with separate components for aim assist, input management, memory scanning, and UI.
+- Uses shared memory IPC for real-time data exchange with minimal latency.
 - All overlay actions, errors, and events are logged to `bin/debug.log`.
 
 ### 4. Unified Debug Logging
 - All modules write their debug output to `bin/debug.log` for easy troubleshooting and diagnostics.
+- Centralized logging system via Utils/Logger for consistent formatting and thread safety.
 
 ### 5. Configuration & Extensibility
-- The system is fully configurable for any game: memory layouts, injection methods, overlay features, and IPC can be adapted via config files and modular code.
+- The system uses shared memory IPC with standardized data structures defined in `SharedStructs.h`.
+- Modular CMake build system allows easy addition of new components.
 - New overlays, assist modules, or analytics can be added without changing the target game code.
+- Configuration files in `config/` directory for game-specific memory layouts and settings.
 
 ---
 
@@ -165,9 +175,13 @@ To demonstrate and test the universal overlay/injection system, we created a sta
    ```sh
    git clone --recurse-submodules https://github.com/elliotttmiller/ai_aim.git
    ```
-2. **Configure and build** using CMake or Visual Studio 2022.
-3. **Run `Launcher.exe`** from `bin/Debug` to start the full workflow.
-4. **Check `bin/debug.log`** for unified debug output and diagnostics.
+2. **Configure and build** using CMake or Visual Studio 2022:
+   - All build outputs are placed in `bin/Debug/`
+   - Use the root `CMakeLists.txt` for full project build
+   - Individual modules can be built separately if needed
+3. **Run `Launcher.exe`** from `bin/Debug/` to start the full workflow
+4. **Check `bin/debug.log`** for unified debug output and diagnostics
+5. **Note**: AimTrainer test app currently requires build configuration fixes
 
 ---
 
@@ -182,6 +196,35 @@ To demonstrate and test the universal overlay/injection system, we created a sta
 ## License
 
 This project uses open-source libraries (Raylib, ImGui, MinHook) under their respective licenses. See `libs/` for details.
+
+---
+
+## Current Status & Development Notes
+
+### Current Implementation Status
+- **Build System**: CMake-based modular build system with all outputs in `bin/Debug/`
+- **IPC**: Shared memory implementation only (legacy named pipe code removed)
+- **Injection**: Manual DLL injection via `CreateRemoteThread` and `LoadLibrary`
+- **Overlay**: ImGui-based overlay with modular architecture
+- **Logging**: Unified logging system via `Utils/Logger` to `bin/debug.log`
+- **Test App**: AimTrainer not currently building (needs CMakeLists.txt configuration)
+
+### Known Issues & Optimizations Needed
+- **AimTrainer Build**: Test application needs proper CMake configuration to build
+- **Overlay/Aim Assist Logic**: Core overlay and aim assist functionality not currently working
+- **Path Configuration**: Some hardcoded paths need to be made dynamic via config files
+- **Error Handling**: Enhanced error handling and recovery mechanisms needed
+- **Performance**: Memory scanning and overlay rendering optimization required
+- **Anti-Detection**: Injection methods need hardening against anti-cheat systems
+
+### Next Steps for Production Ready System
+1. **Fix Overlay/Aim Assist Logic**: Implement working overlay rendering and aim assist algorithms
+2. **Complete AimTrainer Build**: Fix CMake configuration for test application
+3. **Dynamic Configuration**: Move all hardcoded paths to `config/game_memory.cfg`
+4. **Robust Error Handling**: Implement comprehensive error recovery and logging
+5. **Performance Optimization**: Profile and optimize memory scanning and rendering
+6. **Security Hardening**: Implement anti-detection measures for injection
+7. **Documentation**: Add detailed API documentation and usage examples
 
 ---
 

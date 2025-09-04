@@ -4,8 +4,6 @@ add_library(Overlay SHARED
     Core/DllMain.cpp
     Core/Main.cpp
     Input/InputManager.cpp
-    Memory/GameData.cpp
-    Memory/GameData.h
     IPC/SharedMemory.cpp
     IPC/SharedMemory.h
     Renderer/Renderer.cpp

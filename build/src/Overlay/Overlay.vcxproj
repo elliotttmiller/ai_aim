@@ -417,8 +417,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="C:\Users\AMD\ai_aim\src\Overlay\Core\DllMain.cpp" />
     <ClCompile Include="C:\Users\AMD\ai_aim\src\Overlay\Core\Main.cpp" />
     <ClCompile Include="C:\Users\AMD\ai_aim\src\Overlay\Input\InputManager.cpp" />
-    <ClCompile Include="C:\Users\AMD\ai_aim\src\Overlay\Memory\GameData.cpp" />
-    <ClInclude Include="C:\Users\AMD\ai_aim\src\Overlay\Memory\GameData.h" />
     <ClCompile Include="C:\Users\AMD\ai_aim\src\Overlay\IPC\SharedMemory.cpp" />
     <ClInclude Include="C:\Users\AMD\ai_aim\src\Overlay\IPC\SharedMemory.h" />
     <ClCompile Include="C:\Users\AMD\ai_aim\src\Overlay\Renderer\Renderer.cpp" />

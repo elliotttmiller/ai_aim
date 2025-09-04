@@ -17,34 +17,34 @@
 	"dependencies" : 
 	[
 		{
-			"id" : "minhook::@f600057be3935523e04f"
-		},
-		{
-			"id" : "imgui::@da6e21eaf4bb7957c8fa"
-		},
-		{
-			"id" : "Injector::@8a6b3977ff8aa762fec6"
-		},
-		{
 			"id" : "raylib::@e68200293dd0f2d576cc"
+		},
+		{
+			"id" : "minhook::@f600057be3935523e04f"
 		},
 		{
 			"id" : "Utils::@2bf0476c1cf7fa9b5346"
 		},
 		{
-			"id" : "IPC::@eb3397ea24d93a6187f1"
-		},
-		{
 			"id" : "Overlay::@9538a33318ebbaffa620"
 		},
 		{
-			"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df"
+			"id" : "imgui::@da6e21eaf4bb7957c8fa"
+		},
+		{
+			"id" : "IPC::@eb3397ea24d93a6187f1"
+		},
+		{
+			"id" : "Injector::@8a6b3977ff8aa762fec6"
 		},
 		{
 			"id" : "InjectedDLL::@e36625c180c06e785299"
 		},
 		{
 			"id" : "Launcher::@e78b4762ace5960a2e28"
+		},
+		{
+			"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df"
 		}
 	],
 	"id" : "ALL_BUILD::@6890427a1f51a3e7e1df",
