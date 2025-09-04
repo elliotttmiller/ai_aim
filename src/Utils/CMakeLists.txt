@@ -6,7 +6,10 @@ add_library(Utils
     StringConvert.h
 )
 target_include_directories(Utils PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+# Enable position-independent code for use in shared libraries
 set_target_properties(Utils PROPERTIES 
+    POSITION_INDEPENDENT_CODE ON
     RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/bin/Debug
     RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/bin/Release
     ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/bin/Debug

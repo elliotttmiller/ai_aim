@@ -1,17 +1,11 @@
 # src/Overlay/CMakeLists.txt
-add_library(Overlay SHARED
-    AimAssist/AimAssist.cpp
-    Core/DllMain.cpp
-    Core/Main.cpp
-    Input/InputManager.cpp
-    IPC/SharedMemory.cpp
-    IPC/SharedMemory.h
-    Renderer/Renderer.cpp
-    UI/Menu.cpp
+add_library(Overlay STATIC
+    AimAssist/UniversalAimAssist.cpp
 )
 
 # Set output directory for all configs
 set_target_properties(Overlay PROPERTIES
+    POSITION_INDEPENDENT_CODE ON
     RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/bin/Debug
     RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/bin/Release
     LIBRARY_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/bin/Debug
@@ -40,13 +34,11 @@ target_include_directories(Overlay PRIVATE
 
 # Link against necessary libraries
 target_link_libraries(Overlay PRIVATE
-    imgui
-    $<$<PLATFORM_ID:Windows>:minhook>
-    # Platform-specific libraries
-    $<$<PLATFORM_ID:Windows>:dxgi>
-    $<$<PLATFORM_ID:Windows>:opengl32>
-    $<$<PLATFORM_ID:Linux>:GL>
-    $<$<PLATFORM_ID:Linux>:X11>
+    # Platform-specific libraries (commented out for core testing)
+    # $<$<PLATFORM_ID:Windows>:dxgi>
+    # $<$<PLATFORM_ID:Windows>:opengl32>
+    # $<$<PLATFORM_ID:Linux>:GL>
+    # $<$<PLATFORM_ID:Linux>:X11>
     Utils
 )
 

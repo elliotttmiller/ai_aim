@@ -191,6 +191,7 @@ void UniversalConfig::DiscoverGraphicsCapabilities() {
 void UniversalConfig::DiscoverSystemCapabilities() {
     Logger::Get().Log("UniversalConfig", "Discovering system capabilities...");
     
+    Logger::Get().Log("UniversalConfig", "Checking admin privileges...");
     // Check for admin privileges
 #ifdef _WIN32
     BOOL isAdmin = FALSE;
@@ -206,9 +207,12 @@ void UniversalConfig::DiscoverSystemCapabilities() {
     SetValue("system.has_admin_privileges", isAdmin == TRUE);
 #else
     // On Linux, check if running as root
-    SetValue("system.has_admin_privileges", getuid() == 0);
+    uid_t uid = getuid();
+    Logger::Get().Log("UniversalConfig", "Current UID: " + std::to_string(uid));
+    SetValue("system.has_admin_privileges", uid == 0);
 #endif
     
+    Logger::Get().Log("UniversalConfig", "Checking architecture...");
     // Check architecture
 #ifdef _WIN64
     SetValue("system.architecture", "x64");
@@ -216,6 +220,7 @@ void UniversalConfig::DiscoverSystemCapabilities() {
     SetValue("system.architecture", "x86");
 #endif
     
+    Logger::Get().Log("UniversalConfig", "Setting up injection methods...");
     // Check available injection methods based on capabilities
     std::vector<std::string> availableMethods;
     
@@ -231,6 +236,8 @@ void UniversalConfig::DiscoverSystemCapabilities() {
     for (size_t i = 0; i < availableMethods.size(); ++i) {
         SetValue("injection.method_" + std::to_string(i), availableMethods[i]);
     }
+    
+    Logger::Get().Log("UniversalConfig", "System capabilities discovery complete");
 }
 
 void UniversalConfig::SetupDefaultConfiguration() {

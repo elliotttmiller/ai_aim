@@ -17,6 +17,7 @@
     bool ReadProcessMemory(HANDLE, const void*, void*, SIZE_T, SIZE_T*) { return false; }
     HANDLE OpenProcess(DWORD, BOOL, DWORD) { return nullptr; }
     void CloseHandle(HANDLE) {}
+    DWORD GetCurrentProcessId() { return 1234; }
     #define PROCESS_VM_READ 0x0010
     #define PROCESS_QUERY_INFORMATION 0x0400
 #endif
@@ -28,6 +29,12 @@ UniversalMemoryScanner& UniversalMemoryScanner::GetInstance() {
 
 UniversalMemoryScanner::~UniversalMemoryScanner() {
     CloseTargetProcess();
+}
+
+bool UniversalMemoryScanner::Initialize() {
+    // Auto-detect current process (we're running inside the target)
+    DWORD currentPid = GetCurrentProcessId();
+    return Initialize(currentPid);
 }
 
 bool UniversalMemoryScanner::Initialize(DWORD processId) {
@@ -382,6 +389,52 @@ bool UniversalMemoryScanner::GetCameraData(UniversalCamera& camera) {
     return false;
 }
 
+std::vector<UniversalEntity> UniversalMemoryScanner::GetNearbyEntities(float maxDistance) {
+    std::vector<UniversalEntity> entities;
+    
+    // For now, create simulated entities for testing
+    // In a real implementation, this would scan memory for entity arrays
+    #ifdef _WIN32
+    // TODO: Implement actual entity scanning when patterns are refined
+    // This is a placeholder implementation for testing
+    static int frameCounter = 0;
+    frameCounter++;
+    
+    // Generate some test entities for development
+    if (frameCounter % 60 == 0) { // Update every second at 60fps
+        entities.clear();
+        
+        // Create a few simulated targets for testing
+        for (int i = 0; i < 3; i++) {
+            UniversalEntity entity;
+            entity.position = Vec3(100.0f + i * 50.0f, 200.0f + i * 30.0f, 10.0f);
+            entity.type = DataType::Enemy;
+            entity.active = true;
+            entity.distance = 100.0f + i * 25.0f;
+            
+            if (entity.distance <= maxDistance) {
+                entities.push_back(entity);
+            }
+        }
+    }
+    #else
+    // Cross-platform simulation - always return test entities
+    for (int i = 0; i < 2; i++) {
+        UniversalEntity entity;
+        entity.position = Vec3(150.0f + i * 40.0f, 180.0f + i * 20.0f, 5.0f);
+        entity.type = DataType::Enemy;
+        entity.active = true;
+        entity.distance = 80.0f + i * 30.0f;
+        
+        if (entity.distance <= maxDistance) {
+            entities.push_back(entity);
+        }
+    }
+    #endif
+    
+    return entities;
+}
+
 MemoryAddress UniversalMemoryScanner::FindDataStructure(DataType type) {
     auto results = ScanForPatterns();
     
@@ -441,6 +494,18 @@ void UniversalMemoryScanner::ClearCache() {
     m_cache.clear();
     m_cacheTimestamps.clear();
     Logger::Get().Log("MemoryScanner", "Cache cleared");
+}
+
+void UniversalMemoryScanner::Update() {
+    // Update cached data periodically
+    auto now = std::chrono::steady_clock::now();
+    auto timeSinceLastScan = std::chrono::duration<float>(now - m_lastScanTime).count();
+    
+    if (timeSinceLastScan > (m_scanIntervalMs / 1000.0f)) {
+        // Refresh critical memory addresses
+        ScanForPatterns();
+        m_lastScanTime = now;
+    }
 }
 
 size_t UniversalMemoryScanner::GetCacheHitRate() const {

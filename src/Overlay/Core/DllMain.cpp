@@ -1,5 +1,21 @@
 // src/Overlay/Core/DllMain.cpp
-#include <Windows.h>
+#ifdef _WIN32
+    #include <Windows.h>
+#else
+    // Cross-platform stubs
+    typedef void* HMODULE;
+    typedef unsigned long DWORD;
+    typedef void* LPVOID;
+    typedef int BOOL;
+    #define TRUE 1
+    #define FALSE 0
+    #define DLL_PROCESS_ATTACH 1
+    #define DLL_THREAD_ATTACH 2
+    #define DLL_THREAD_DETACH 3
+    #define DLL_PROCESS_DETACH 0
+    #define UNREFERENCED_PARAMETER(x) ((void)x)
+    #define APIENTRY
+#endif
 #include "Main.h"
 #include <fstream>
 

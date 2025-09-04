@@ -2,6 +2,7 @@
 
 #include "../Utils/UniversalMemoryScanner.h"
 #include "../Utils/UniversalConfig.h"
+#include "../Utils/GameDetection.h"
 #include <vector>
 #include <memory>
 #include <chrono>

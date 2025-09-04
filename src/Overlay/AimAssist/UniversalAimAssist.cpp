@@ -7,10 +7,13 @@
 
 #ifdef _WIN32
     #include <Windows.h>
+    typedef ULONG_PTR ULONG_PTR_COMPAT;
 #else
     // Cross-platform input simulation stubs
+    typedef unsigned long DWORD;
+    typedef unsigned long ULONG_PTR_COMPAT;
     void SetCursorPos(int x, int y) { (void)x; (void)y; }
-    void mouse_event(DWORD, DWORD, DWORD, DWORD, ULONG_PTR) {}
+    void mouse_event(DWORD, DWORD, DWORD, DWORD, ULONG_PTR_COMPAT) {}
     void GetCursorPos(void*) {}
     bool GetKeyState(int) { return false; }
     #define MOUSEEVENTF_MOVE 0x0001
@@ -187,6 +190,11 @@ float UniversalAimAssist::CalculateTargetPriority(const Target& target) {
     switch (m_config.strategy) {
         case TargetingStrategy::Closest:
             priority = 1000.0f / std::max(target.distance, 1.0f);
+            break;
+            
+        case TargetingStrategy::LowestHealth:
+            // TODO: Implement health-based targeting when health data is available
+            priority = 100.0f / std::max(target.distance, 1.0f);
             break;
             
         case TargetingStrategy::Crosshair: {

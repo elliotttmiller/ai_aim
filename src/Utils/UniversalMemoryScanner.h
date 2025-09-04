@@ -74,11 +74,14 @@ struct MemoryAddress {
 };
 
 // Universal game data structures
+#ifndef VEC3_DEFINED
+#define VEC3_DEFINED
 struct Vec3 {
     float x, y, z;
     Vec3() : x(0), y(0), z(0) {}
     Vec3(float x_, float y_, float z_) : x(x_), y(y_), z(z_) {}
 };
+#endif
 
 struct UniversalPlayer {
     Vec3 position;
@@ -112,9 +115,13 @@ public:
     static UniversalMemoryScanner& GetInstance();
     
     // Initialization and configuration
+    bool Initialize(); // Auto-detect current process
     bool Initialize(DWORD processId);
     void SetTargetProcess(DWORD processId);
     bool IsInitialized() const { return m_processHandle != nullptr; }
+    
+    // Runtime operations
+    void Update();
     
     // Pattern management
     void AddPattern(const MemoryPattern& pattern);

@@ -56,8 +56,8 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/IPC/CMakeLists.txt")
     add_subdirectory(src/IPC)
 endif()
 
-# Build Overlay (Windows only)
-if(WIN32)
+# Build Overlay (Windows only, but enable for cross-platform testing)
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/Overlay/CMakeLists.txt")
     add_subdirectory(src/Overlay)
 endif()
 
@@ -71,8 +71,8 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/Launcher/CMakeLists.txt")
     add_subdirectory(src/Launcher)
 endif()
 
-# Build InjectedDLL (Windows only)
-if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/src/InjectedDLL/CMakeLists.txt")
+# Build InjectedDLL (Windows only, but enable for cross-platform testing)
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/InjectedDLL/CMakeLists.txt")
     add_subdirectory(src/InjectedDLL)
 endif()
 
