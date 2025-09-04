@@ -14,11 +14,11 @@
     typedef int BOOL;
     #define TRUE 1
     #define FALSE 0
-    DWORD GetCurrentProcessId() { return 1234; }
-    HANDLE CreateToolhelp32Snapshot(DWORD, DWORD) { return INVALID_HANDLE_VALUE; }
-    BOOL Process32FirstW(HANDLE, void*) { return FALSE; }
-    BOOL Process32NextW(HANDLE, void*) { return FALSE; }
-    void CloseHandle(HANDLE) {}
+    inline DWORD GetCurrentProcessId() { return 1234; }
+    inline HANDLE CreateToolhelp32Snapshot(DWORD, DWORD) { return INVALID_HANDLE_VALUE; }
+    inline BOOL Process32FirstW(HANDLE, void*) { return FALSE; }
+    inline BOOL Process32NextW(HANDLE, void*) { return FALSE; }
+    inline void CloseHandle(HANDLE) {}
 #endif
 
 UniversalGameDetector& UniversalGameDetector::GetInstance() {

@@ -56,8 +56,10 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/IPC/CMakeLists.txt")
     add_subdirectory(src/IPC)
 endif()
 
-# Build Overlay
-add_subdirectory(src/Overlay)
+# Build Overlay (Windows only)
+if(WIN32)
+    add_subdirectory(src/Overlay)
+endif()
 
 # Build Injector
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/Injector/CMakeLists.txt")
@@ -69,12 +71,12 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/Launcher/CMakeLists.txt")
     add_subdirectory(src/Launcher)
 endif()
 
-# Build InjectedDLL
-if(EXISTS "${CMAKE_SOURCE_DIR}/src/InjectedDLL/CMakeLists.txt")
+# Build InjectedDLL (Windows only)
+if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/src/InjectedDLL/CMakeLists.txt")
     add_subdirectory(src/InjectedDLL)
 endif()
 
-# Build AimTrainer
-if(EXISTS "${CMAKE_SOURCE_DIR}/src/AimTrainer/CMakeLists.txt")
-    add_subdirectory(src/AimTrainer)
-endif()
+# Build AimTrainer (disable for cross-platform development as it uses raylib)
+# if(EXISTS "${CMAKE_SOURCE_DIR}/src/AimTrainer/CMakeLists.txt")
+#     add_subdirectory(src/AimTrainer)
+# endif()
