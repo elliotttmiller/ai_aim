@@ -5,15 +5,45 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+# Set default build type if not specified
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build." FORCE)
+endif()
 
-# Build raylib (includes GLFW)
-add_subdirectory(libs/raylib/src)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/Debug)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/Debug)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/Debug)
 
-# Build minhook
-add_subdirectory(libs/minhook)
+# Define missing JoinPaths function for raylib
+function(join_paths joined_path first_path_segment)
+    set(temp_path "${first_path_segment}")
+    foreach(current_segment IN LISTS ARGN)
+        if(NOT ("${current_segment}" STREQUAL ""))
+            if(IS_ABSOLUTE "${current_segment}")
+                set(temp_path "${current_segment}")
+            else()
+                set(temp_path "${temp_path}/${current_segment}")
+            endif()
+        endif()
+    endforeach()
+    set(${joined_path} "${temp_path}" PARENT_SCOPE)
+endfunction()
+
+# For cross-platform development, temporarily disable raylib to focus on core components
+# set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+# set(BUILD_GAMES OFF CACHE BOOL "" FORCE) 
+# set(SUPPORT_FILEFORMAT_FLAC OFF CACHE BOOL "" FORCE)
+# set(PLATFORM_DESKTOP ON CACHE BOOL "" FORCE)
+# set(GLFW_BUILD_X11 OFF CACHE BOOL "" FORCE)
+# set(GLFW_BUILD_WAYLAND OFF CACHE BOOL "" FORCE)
+
+# Build raylib (use main directory, not src) - TEMPORARILY DISABLED
+# add_subdirectory(libs/raylib)
+
+# Build minhook (Windows-specific - disable for cross-platform development)
+if(WIN32)
+    add_subdirectory(libs/minhook)
+endif()
 
 # Build dear-imgui
 add_subdirectory(libs/dear-imgui)
@@ -42,4 +72,9 @@ endif()
 # Build InjectedDLL
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/InjectedDLL/CMakeLists.txt")
     add_subdirectory(src/InjectedDLL)
+endif()
+
+# Build AimTrainer
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/AimTrainer/CMakeLists.txt")
+    add_subdirectory(src/AimTrainer)
 endif()

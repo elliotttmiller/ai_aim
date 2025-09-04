@@ -41,9 +41,12 @@ target_include_directories(Overlay PRIVATE
 # Link against necessary libraries
 target_link_libraries(Overlay PRIVATE
     imgui
-    minhook
-    dxgi
-    opengl32
+    $<$<PLATFORM_ID:Windows>:minhook>
+    # Platform-specific libraries
+    $<$<PLATFORM_ID:Windows>:dxgi>
+    $<$<PLATFORM_ID:Windows>:opengl32>
+    $<$<PLATFORM_ID:Linux>:GL>
+    $<$<PLATFORM_ID:Linux>:X11>
     Utils
 )
 
