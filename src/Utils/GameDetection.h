@@ -94,9 +94,9 @@ struct GameInfo {
                  engineConfidence(0.0f), genreConfidence(0.0f), apiConfidence(0.0f) {}
 };
 
-class UniversalGameDetector {
+class UnifiedGameDetector {
 public:
-    static UniversalGameDetector& GetInstance();
+    static UnifiedGameDetector& GetInstance();
     
     // Main detection methods
     std::vector<GameInfo> DetectAllGames();
@@ -119,8 +119,8 @@ public:
     void EnableAPIDetection(bool enable) { m_enableAPIDetection = enable; }
     
 private:
-    UniversalGameDetector() = default;
-    ~UniversalGameDetector() = default;
+    UnifiedGameDetector() = default;
+    ~UnifiedGameDetector() = default;
     
     // Detection algorithms
     GameEngine DetectGameEngine(const GameInfo& info);

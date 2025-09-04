@@ -322,8 +322,8 @@ private:
     UniversalTarget* GetPooledTarget();
     void ReturnTargetToPool(UniversalTarget* target);
     
-    // Advanced prediction algorithms
-    Vec3 ApplyKalmanFiltering(const UniversalTarget& target);
+    // Simple prediction algorithms (no fake AI)
+    Vec3 ApplySimplePrediction(const UniversalTarget& target);
     Vec3 PredictWithAcceleration(const UniversalTarget& target, float timeMs);
     float CalculateInterceptionTime(const UniversalTarget& target);
     

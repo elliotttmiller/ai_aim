@@ -14,7 +14,9 @@ struct Vector3 {
     Vector3(float x_, float y_, float z_) : x(x_), y(y_), z(z_) {}
 };
 
-// Simple Vec3 for IPC
+// --- Simple, Honest Aim Assist IPC Data Structures ---
+// These structures match the actual data from AimTrainer with no embellishment
+
 #ifndef VEC3_DEFINED
 #define VEC3_DEFINED
 struct Vec3 {
@@ -81,6 +83,36 @@ struct CameraInfo {
     CameraInfo() : position(0,0,0), target(0,0,1), up(0,1,0), fovy(60.0f), projection(0) {}
 };
 
+// Simple, honest IPC packet that matches actual AimTrainer data
+struct SimpleIPCPacket {
+    CameraInfo camera;              // Camera data from AimTrainer
+    TargetInfo targets[32];         // Target data (reduced to 32 for performance)
+    int targetCount;                // Number of active targets
+    uint32_t frameId;              // Frame counter
+    uint32_t timestamp;            // Timestamp
+    
+    SimpleIPCPacket() : targetCount(0), frameId(0), timestamp(0) {}
+    
+    // Convert from legacy IpcPacket for backward compatibility
+    void FromLegacyPacket(const IpcPacket& legacy) {
+        // Convert camera
+        camera.position = Vec3(legacy.camera.position.x, legacy.camera.position.y, legacy.camera.position.z);
+        camera.target = Vec3(legacy.camera.target.x, legacy.camera.target.y, legacy.camera.target.z);
+        camera.up = Vec3(legacy.camera.up.x, legacy.camera.up.y, legacy.camera.up.z);
+        camera.fovy = legacy.camera.fovy;
+        camera.projection = legacy.camera.projection;
+        
+        // Convert targets
+        targetCount = std::min(legacy.targetCount, 32);
+        for (int i = 0; i < targetCount; ++i) {
+            targets[i].position = Vec3(legacy.targets[i][0], legacy.targets[i][1], legacy.targets[i][2]);
+            targets[i].active = legacy.targets[i][3] > 0.5f;
+            targets[i].velocity = Vec3(0, 0, 0); // Legacy doesn't have velocity
+            targets[i].lifeTimer = 2.0f; // Default life timer
+        }
+    }
+};
+
 // Maximum targets for performance
 constexpr int MAX_SIMPLE_TARGETS = 32;
 
@@ -104,7 +136,7 @@ struct WorkingSharedMemory {
                            targetCount(0), frameId(0), timestamp(0) {}
 };
 
-// Legacy compatibility structures (simple versions)
+// Legacy compatibility structures (for backward compatibility)
 struct RaylibCamera {
     Vec3 position;
     Vec3 target;
@@ -138,30 +170,6 @@ struct IpcPacket {
             targets[i][0] = targets[i][1] = targets[i][2] = targets[i][3] = 0.0f;
         }
     }
-    
-    // Convert from our working format
-    void FromWorkingMemory(const WorkingSharedMemory& working) {
-        // Convert camera
-        camera.position = working.camera.position;
-        camera.target = working.camera.target;
-        camera.up = working.camera.up;
-        camera.fovy = working.camera.fovy;
-        camera.projection = working.camera.projection;
-        
-        // Convert targets
-        targetCount = std::min(working.targetCount, 128);
-        for (int i = 0; i < targetCount; ++i) {
-            targets[i][0] = working.targets[i].position.x;
-            targets[i][1] = working.targets[i].position.y;
-            targets[i][2] = working.targets[i].position.z;
-            targets[i][3] = working.targets[i].active ? 1.0f : 0.0f;
-        }
-        
-        // Clear unused targets
-        for (int i = targetCount; i < 128; ++i) {
-            targets[i][0] = targets[i][1] = targets[i][2] = targets[i][3] = 0.0f;
-        }
-    }
 };
 
 // Legacy GameDataPacket for compatibility
@@ -169,6 +177,22 @@ struct GameDataPacket {
     float camera[sizeof(RaylibCamera)/sizeof(float)]; // raw camera data
     float targets[128][4]; // x, y, z, active
     int targetCount;
+};
+
+// Performance monitoring structure
+struct AimAssistMetrics {
+    float avgFrameTime;        // Average frame time in ms
+    float maxFrameTime;        // Maximum frame time in ms
+    uint32_t totalFrames;      // Total frames processed
+    uint32_t successfulScans;  // Successful memory scans
+    uint32_t failedScans;      // Failed memory scans
+    float memoryUsage;         // Current memory usage in MB
+    float cacheHitRate;        // Memory cache hit rate (0-100%)
+    uint8_t systemLoad;        // Current system load (0-255)
+    
+    AimAssistMetrics() : avgFrameTime(16.67f), maxFrameTime(16.67f), 
+                        totalFrames(0), successfulScans(0), failedScans(0),
+                        memoryUsage(0.0f), cacheHitRate(0.0f), systemLoad(128) {}
 };
 
 // Constants for shared memory

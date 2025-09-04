@@ -46,7 +46,7 @@ bool UnifiedAimAssist::Initialize() {
         PreloadConfiguration();
         
         // Detect and adapt to current game
-        auto& detector = UniversalGameDetector::GetInstance();
+        auto& detector = UnifiedGameDetector::GetInstance();
         auto bestTarget = detector.GetBestInjectionTarget();
         
         if (bestTarget.processId != 0) {
@@ -488,10 +488,10 @@ Vec3 UnifiedAimAssist::ApplyPrediction(const UniversalTarget& target) {
         }
     }
     
-    // Apply Kalman filtering for smoother prediction
-    Vec3 kalmanPredicted = ApplyKalmanFiltering(target);
+    // Apply simple physics-based prediction
+    Vec3 simplePredicted = ApplySimplePrediction(target);
     
-    // Combine velocity-based and Kalman predictions
+    // Use basic velocity prediction
     Vec3 velocityPredicted = AimUtils::PredictTargetPosition(
         target.worldPosition, 
         avgVelocity, 
@@ -505,14 +505,12 @@ Vec3 UnifiedAimAssist::ApplyPrediction(const UniversalTarget& target) {
         velocityPredicted += accelerationComponent;
     }
     
-    // Weighted combination of predictions
-    float kalmanWeight = 0.3f;
-    float velocityWeight = 0.7f;
-    Vec3 combinedPrediction = kalmanPredicted * kalmanWeight + velocityPredicted * velocityWeight;
+    // Use simple prediction (no fake weighting)
+    Vec3 finalPrediction = velocityPredicted;
     
     // Convert predicted world position to screen
     Vec3 predictedScreenPos;
-    if (WorldToScreen(combinedPrediction, predictedScreenPos)) {
+    if (WorldToScreen(finalPrediction, predictedScreenPos)) {
         return predictedScreenPos;
     }
     
@@ -1038,11 +1036,10 @@ void UnifiedAimAssist::UpdateThreatAssessment() {
     }
 }
 
-Vec3 UnifiedAimAssist::ApplyKalmanFiltering(const UniversalTarget& target) {
-    // Simplified Kalman filter for position prediction
-    // In a full implementation, this would maintain state matrices
+Vec3 UnifiedAimAssist::ApplySimplePrediction(const UniversalTarget& target) {
+    // Simple physics-based prediction: position + velocity * time
+    // This is honest about what it does - basic linear prediction
     
-    // For now, use weighted average of velocity history as a simplified filter
     Vec3 avgVelocity = target.GetAverageVelocity();
     Vec3 predicted = target.worldPosition + avgVelocity * (PREDICTION_LOOKAHEAD_MS / 1000.0f);
     
