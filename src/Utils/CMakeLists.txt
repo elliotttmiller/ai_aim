@@ -1,6 +1,7 @@
 add_library(Utils 
     Logger.cpp 
     GameDetection.cpp
+    UniversalCore.cpp
     UniversalConfig.cpp
     UniversalMemoryScanner.cpp
     StringConvert.h

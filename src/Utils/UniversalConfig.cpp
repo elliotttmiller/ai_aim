@@ -1,10 +1,10 @@
 #include "UniversalConfig.h"
+#include "UniversalCore.h"
 #include "GameDetection.h"
 #include "Logger.h"
 #include "StringConvert.h"
 #include <filesystem>
 #include <fstream>
-#include <mutex>
 #include <cstring>
 
 #ifdef _WIN32
@@ -15,24 +15,10 @@
     #include <pwd.h>
 #endif
 
-UniversalConfig& UniversalConfig::GetInstance() {
-    static UniversalConfig instance;
-    return instance;
-}
-
-bool UniversalConfig::Initialize() {
-    std::lock_guard<std::recursive_mutex> lock(m_mutex);
-    
-    if (m_initialized) {
-        return true;
-    }
-    
+bool UniversalConfig::DoInitialize() {
     Logger::Get().Log("UniversalConfig", "Initializing autonomous configuration system...");
     
     try {
-        // Discover all paths dynamically
-        DiscoverPaths();
-        
         // Discover available target processes
         DiscoverTargetProcesses();
         
@@ -56,7 +42,6 @@ bool UniversalConfig::Initialize() {
             }
         }
         
-        m_initialized = true;
         Logger::Get().Log("UniversalConfig", "Configuration system initialized successfully");
         return true;
         
@@ -66,63 +51,9 @@ bool UniversalConfig::Initialize() {
     }
 }
 
-void UniversalConfig::DiscoverPaths() {
-    // Get executable directory using Windows API directly
-#ifdef _WIN32
-    wchar_t exePath[MAX_PATH];
-    GetModuleFileNameW(NULL, exePath, MAX_PATH);
-    m_executablePath = std::filesystem::path(exePath).parent_path().wstring();
-#else
-    m_executablePath = std::filesystem::current_path().wstring();
-#endif
-    Logger::Get().Log("UniversalConfig", "Executable path: " + WStringToString(m_executablePath));
-    
-    // Discover config directory (multiple possible locations)
-    std::vector<std::wstring> configCandidates = {
-        m_executablePath + L"/config",
-        m_executablePath + L"/../config",
-        m_executablePath + L"/../../config",
-        m_executablePath + L"/cfg",
-        m_executablePath
-    };
-    
-    for (const auto& candidate : configCandidates) {
-        if (std::filesystem::exists(candidate) && std::filesystem::is_directory(candidate)) {
-            m_configPath = candidate;
-            break;
-        }
-    }
-    
-    // If no config directory found, create one
-    if (m_configPath.empty()) {
-        m_configPath = m_executablePath + L"/config";
-        std::filesystem::create_directories(m_configPath);
-    }
-    
-    // Discover bin directory (where compiled binaries are located)
-    std::vector<std::wstring> binCandidates = {
-        m_executablePath + L"/bin/Debug",
-        m_executablePath + L"/bin/Release", 
-        m_executablePath + L"/bin",
-        m_executablePath + L"/../bin/Debug",
-        m_executablePath + L"/../bin/Release",
-        m_executablePath + L"/../bin",
-        m_executablePath
-    };
-    
-    for (const auto& candidate : binCandidates) {
-        if (std::filesystem::exists(candidate) && std::filesystem::is_directory(candidate)) {
-            m_binPath = candidate;
-            break;
-        }
-    }
-    
-    if (m_binPath.empty()) {
-        m_binPath = m_executablePath;
-    }
-    
-    Logger::Get().Log("UniversalConfig", "Config path: " + WStringToString(m_configPath));
-    Logger::Get().Log("UniversalConfig", "Bin path: " + WStringToString(m_binPath));
+void UniversalConfig::DoReset() {
+    m_discoveredTargets.clear();
+    m_supportedAPIs.clear();
 }
 
 void UniversalConfig::DiscoverTargetProcesses() {
@@ -284,41 +215,35 @@ void UniversalConfig::SetupDefaultConfiguration() {
 
 bool UniversalConfig::LoadConfiguration() {
     std::string configFileName = CONFIG_FILE_NAME;
-    std::wstring configFile = m_configPath + L"/" + std::wstring(configFileName.begin(), configFileName.end());
+    std::wstring configFile = GetConfigPath() + L"/" + std::wstring(configFileName.begin(), configFileName.end());
     
     if (!std::filesystem::exists(configFile)) {
         Logger::Get().Log("UniversalConfig", "No existing configuration file found, using defaults");
         return true;
     }
     
-    // Convert to narrow string for file operations
-    std::string narrowConfigFile = WStringToString(configFile);
-    std::ifstream file(narrowConfigFile);
-    if (!file.is_open()) {
-        Logger::Get().Log("UniversalConfig", "Failed to open configuration file");
-        return false;
-    }
+    return m_configStore.LoadFromFile(configFile);
+}
+
+bool UniversalConfig::SaveConfiguration() {
+    std::string configFileName = CONFIG_FILE_NAME;
+    std::wstring configFile = GetConfigPath() + L"/" + std::wstring(configFileName.begin(), configFileName.end());
     
-    // Simple key=value format for now (could be JSON in production)
-    std::string line;
-    while (std::getline(file, line)) {
-        if (line.empty() || line[0] == '#') continue;
-        
-        size_t pos = line.find('=');
-        if (pos != std::string::npos) {
-            std::string key = line.substr(0, pos);
-            std::string value = line.substr(pos + 1);
-            m_config[key] = value;
-        }
-    }
-    
-    Logger::Get().Log("UniversalConfig", "Configuration loaded from file");
-    return true;
+    return m_configStore.SaveToFile(configFile);
+}
+
+void UniversalConfig::RegisterCallback(const std::string& key, ConfigUpdateCallback callback) {
+    m_configStore.RegisterCallback(key, callback);
+}
+
+void UniversalConfig::RefreshConfiguration() {
+    Reset(); // Clear state
+    Initialize(); // Reinitialize
 }
 
 bool UniversalConfig::ValidateConfiguration() const {
     // Check that essential paths exist
-    if (!std::filesystem::exists(m_binPath)) {
+    if (!std::filesystem::exists(GetBinPath())) {
         return false;
     }
     
@@ -328,19 +253,14 @@ bool UniversalConfig::ValidateConfiguration() const {
         return false;
     }
     
-    std::wstring injectorPath = GetInjectorPath();
-    if (!std::filesystem::exists(injectorPath)) {
-        return false;
-    }
-    
     return true;
 }
 
 bool UniversalConfig::AutoRepairConfiguration() {
     Logger::Get().Log("UniversalConfig", "Attempting configuration auto-repair...");
     
-    // Try to rediscover paths
-    DiscoverPaths();
+    // Try to reload configuration
+    LoadConfiguration();
     
     // Validate again
     return ValidateConfiguration();
@@ -348,30 +268,30 @@ bool UniversalConfig::AutoRepairConfiguration() {
 
 // Path getters using discovered paths
 std::wstring UniversalConfig::GetExecutablePath() const {
-    return m_executablePath;
+    return UniversalCore::PathUtils::GetExecutableDirectory();
 }
 
 std::wstring UniversalConfig::GetConfigPath() const {
-    return m_configPath;
+    return UniversalCore::PathUtils::GetConfigDirectory();
 }
 
 std::wstring UniversalConfig::GetBinPath() const {
-    return m_binPath;
+    return UniversalCore::PathUtils::GetBinDirectory();
 }
 
 std::wstring UniversalConfig::GetLogPath() const {
     std::string logFileName = LOG_FILE_NAME;
-    return m_binPath + L"/" + std::wstring(logFileName.begin(), logFileName.end());
+    return GetBinPath() + L"/" + std::wstring(logFileName.begin(), logFileName.end());
 }
 
 std::wstring UniversalConfig::GetInjectorPath() const {
     std::string injectorFileName = INJECTOR_EXE_NAME;
-    return m_binPath + L"/" + std::wstring(injectorFileName.begin(), injectorFileName.end());
+    return GetBinPath() + L"/" + std::wstring(injectorFileName.begin(), injectorFileName.end());
 }
 
 std::wstring UniversalConfig::GetOverlayDllPath() const {
     std::string overlayFileName = OVERLAY_DLL_NAME;
-    return m_binPath + L"/" + std::wstring(overlayFileName.begin(), overlayFileName.end());
+    return GetBinPath() + L"/" + std::wstring(overlayFileName.begin(), overlayFileName.end());
 }
 
 std::wstring UniversalConfig::GetTargetProcessName() const {
@@ -415,9 +335,4 @@ bool UniversalConfig::IsAimAssistEnabled() const {
 
 std::vector<std::wstring> UniversalConfig::GetSupportedGraphicsAPIs() const {
     return m_supportedAPIs;
-}
-
-void UniversalConfig::RegisterCallback(const std::string& key, ConfigUpdateCallback callback) {
-    std::lock_guard<std::recursive_mutex> lock(m_mutex);
-    m_callbacks[key].push_back(callback);
 }
