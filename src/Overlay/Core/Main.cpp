@@ -1,161 +1,184 @@
-// src/Overlay/Core/Main.cpp
 #include "Main.h"
-#include <iostream>
-#include <chrono>
-#include <thread>
 #include <windows.h>
 #include <TlHelp32.h>
 #include <gl/GL.h>
-#include "../Renderer/Renderer.h"
-#include "IPC/SharedMemory.h"
-#include "IPC/NamedPipe.h"
-#include <MinHook.h>
+#include <dwmapi.h>
+#include <string>
 #include <imgui.h>
 #include <imgui_impl_win32.h>
 #include <imgui_impl_opengl3.h>
-#include <windowsx.h>
+#include "../../IPC/NamedPipe.h"
+#include "../../IPC/SharedStructs.h"
+#include "AimAssist/AimAssist.h"
 #include "Memory/GameData.h"
-#include <fstream>
+#include "../../Utils/Logger.h"
+#pragma comment(lib, "dwmapi.lib")
 
-// Forward declaration
-extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND, UINT, WPARAM, LPARAM);
 
-// Helper: Get PID of AimTrainer.exe
-DWORD GetAimTrainerPID() {
-    DWORD pid = 0;
-    HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if (hSnap != INVALID_HANDLE_VALUE) {
+namespace Core {
+    const wchar_t* OVERLAY_WINDOW_CLASS_NAME = L"AI_AIM_OverlayWindow";
+    DWORD FindGamePID() {
+        HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+        if (snap == INVALID_HANDLE_VALUE) return 0;
         PROCESSENTRY32W entry = { sizeof(entry) };
-        if (Process32FirstW(hSnap, &entry)) {
+        DWORD pid = 0;
+        if (Process32FirstW(snap, &entry)) {
             do {
-                if (!_wcsicmp(entry.szExeFile, L"AimTrainer.exe")) {
+                if (wcscmp(entry.szExeFile, L"AimTrainer.exe") == 0) {
                     pid = entry.th32ProcessID;
                     break;
                 }
-            } while (Process32NextW(hSnap, &entry));
+            } while (Process32NextW(snap, &entry));
         }
-        CloseHandle(hSnap);
+        CloseHandle(snap);
+        return pid;
     }
-    return pid;
-}
-
-// Helper: Enumerate windows and find HWND for given PID
-HWND FindWindowByPID(DWORD pid) {
-    struct EnumData { DWORD pid; HWND hwnd; } data = { pid, nullptr };
-    auto EnumProc = [](HWND hwnd, LPARAM lParam) -> BOOL {
-        DWORD winPID;
-        GetWindowThreadProcessId(hwnd, &winPID);
-        auto* d = reinterpret_cast<EnumData*>(lParam);
-        if (winPID == d->pid && IsWindowVisible(hwnd)) {
-            d->hwnd = hwnd;
-            return FALSE; // Stop enumeration
-        }
-        return TRUE;
-    };
-    EnumWindows(EnumProc, (LPARAM)&data);
-    return data.hwnd;
-}
-
-// Typedef for wglSwapBuffers
-using PFNWGLSWAPBUFFERS = BOOL(WINAPI*)(HDC);
-PFNWGLSWAPBUFFERS fpSwapBuffers = nullptr;
-Renderer* g_renderer = nullptr;
-
-BOOL WINAPI hkSwapBuffers(HDC hdc) {
-    static bool first = true;
-    static bool imguiGLInitialized = false;
-    if (first) {
-        std::cout << "[Overlay] hkSwapBuffers called!" << std::endl;
-        std::cout << "[Overlay] Renderer HWND: " << g_renderer->m_hWindow << std::endl;
-        first = false;
-    }
-    HGLRC prevCtx = wglGetCurrentContext();
-    HGLRC hglrc = wglGetCurrentContext();
-    if (hglrc && wglMakeCurrent(hdc, hglrc)) {
-        if (!imguiGLInitialized) {
-            try {
-                ImGui_ImplOpenGL3_Init();
-                imguiGLInitialized = true;
-                std::cout << "ImGui_ImplOpenGL3_Init succeeded." << std::endl;
-            } catch (...) {
-                std::cout << "ImGui_ImplOpenGL3_Init crashed!" << std::endl;
+    HWND FindWindowByPID(DWORD pid) {
+        struct EnumData { DWORD pid; HWND hwnd; };
+        EnumData data = { pid, nullptr };
+        EnumWindows([](HWND hwnd, LPARAM lParam) -> BOOL {
+            DWORD winPID;
+            GetWindowThreadProcessId(hwnd, &winPID);
+            auto* d = reinterpret_cast<EnumData*>(lParam);
+            if (winPID == d->pid && IsWindowVisible(hwnd) && GetWindowTextLength(hwnd) > 0) {
+                d->hwnd = hwnd;
+                return FALSE;
             }
-        }
-        if (g_renderer) {
-            g_renderer->Render();
-        }
-        wglMakeCurrent(hdc, prevCtx);
+            return TRUE;
+        }, (LPARAM)&data);
+        return data.hwnd;
     }
-    return fpSwapBuffers(hdc);
-}
-
-void SetupSwapBuffersHook() {
-    HMODULE hOpenGL = GetModuleHandleA("opengl32.dll");
-    if (!hOpenGL) return;
-    void* pSwap = GetProcAddress(hOpenGL, "wglSwapBuffers");
-    if (!pSwap) return;
-    MH_Initialize();
-    MH_CreateHook(pSwap, &hkSwapBuffers, reinterpret_cast<void**>(&fpSwapBuffers));
-    MH_EnableHook(pSwap);
-}
-
-WNDPROC g_OriginalWndProc = nullptr;
-LRESULT CALLBACK OverlayWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
-        return 0;
-    return CallWindowProc(g_OriginalWndProc, hWnd, msg, wParam, lParam);
-}
-
-void HookWndProc(HWND hWnd) {
-    g_OriginalWndProc = (WNDPROC)SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)OverlayWndProc);
+    LRESULT CALLBACK OverlayWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+        if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
+            return true;
+        return DefWindowProc(hWnd, msg, wParam, lParam);
+    }
+    HWND CreateOverlayWindow(HWND gameHwnd) {
+        RECT rect;
+        GetWindowRect(gameHwnd, &rect);
+        WNDCLASSEXW wc = {
+            sizeof(WNDCLASSEXW), 0, OverlayWndProc, 0, 0,
+            GetModuleHandleW(nullptr), nullptr, LoadCursor(NULL, IDC_ARROW), nullptr, nullptr,
+            OVERLAY_WINDOW_CLASS_NAME, nullptr
+        };
+        RegisterClassExW(&wc);
+        HWND hwnd = CreateWindowExW(
+            WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOPMOST,
+            wc.lpszClassName, L"AI AIM Overlay", WS_POPUP,
+            rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top,
+            nullptr, nullptr, wc.hInstance, nullptr
+        );
+        SetLayeredWindowAttributes(hwnd, RGB(0,0,0), 0, LWA_COLORKEY);
+        MARGINS margins = { -1 };
+        DwmExtendFrameIntoClientArea(hwnd, &margins);
+        ShowWindow(hwnd, SW_SHOW);
+        return hwnd;
+    }
+    bool InitializeOpenGL(HWND hwnd, HDC& hdc, HGLRC& hglrc) {
+        hdc = GetDC(hwnd);
+        if (!hdc) return false;
+        PIXELFORMATDESCRIPTOR pfd = { sizeof(pfd), 1, PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER, PFD_TYPE_RGBA, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 24, 8, 0, PFD_MAIN_PLANE, 0, 0, 0, 0 };
+        int format = ChoosePixelFormat(hdc, &pfd);
+        if (!format || !SetPixelFormat(hdc, format, &pfd)) return false;
+        hglrc = wglCreateContext(hdc);
+        return hglrc && wglMakeCurrent(hdc, hglrc);
+    }
+    bool InitializeImGui(HWND hwnd) {
+        IMGUI_CHECKVERSION();
+        ImGui::CreateContext();
+        ImGuiIO& io = ImGui::GetIO();
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+        io.IniFilename = nullptr;
+        if (!ImGui_ImplWin32_Init(hwnd)) return false;
+        if (!ImGui_ImplOpenGL3_Init("#version 130")) return false;
+        ImGui::StyleColorsDark();
+        return true;
+    }
+    void RenderFrame(const RECT& rect) {
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplWin32_NewFrame();
+        ImGui::NewFrame();
+        AimAssist::GetInstance()->Update();
+        AimAssist::GetInstance()->DrawVisuals();
+        ImGui::Render();
+        glViewport(0, 0, rect.right - rect.left, rect.bottom - rect.top);
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    }
+    void Cleanup(HDC hdc, HGLRC hglrc, HWND overlayHwnd) {
+        Logger::Get().Log("OverlayCore", "Cleanup initiated.");
+        ImGui_ImplOpenGL3_Shutdown();
+        ImGui_ImplWin32_Shutdown();
+        ImGui::DestroyContext();
+        wglMakeCurrent(nullptr, nullptr);
+        wglDeleteContext(hglrc);
+        ReleaseDC(overlayHwnd, hdc);
+        DestroyWindow(overlayHwnd);
+        // IPC pipe cleanup is handled in MainLoop
+    }
 }
 
 void Main::MainLoop() {
-    AllocConsole();
-    FILE* f;
-    freopen_s(&f, "CONOUT$", "w", stdout);
-    std::ofstream log("bin/debug.log", std::ios::app);
-    log << "[Overlay] MainLoop started." << std::endl;
-    DWORD pid = GetAimTrainerPID();
-    log << "[Overlay] AimTrainer PID: " << pid << std::endl;
+    Logger::Get().Log("OverlayCore", "MainLoop started.");
+    DWORD pid = Core::FindGamePID();
     if (!pid) {
-        log << "[Overlay] Failed to find AimTrainer.exe PID!" << std::endl;
+        Logger::Get().Log("OverlayCore", "ERROR: Target game process not found.");
         return;
     }
-    HWND hWnd = FindWindowByPID(pid);
-    log << "[Overlay] Found AimTrainer HWND: " << hWnd << std::endl;
-    if (!hWnd) {
-        log << "[Overlay] Failed to find AimTrainer window!" << std::endl;
+    HWND gameHwnd = Core::FindWindowByPID(pid);
+    if (!gameHwnd) {
+        Logger::Get().Log("OverlayCore", "ERROR: Target game window not found.");
         return;
     }
-    g_renderer = new Renderer(hWnd);
-    log << "[Overlay] Renderer created." << std::endl;
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    if (!ImGui_ImplWin32_Init(hWnd)) {
-        log << "[Overlay] ImGui_ImplWin32_Init failed!" << std::endl;
+    HWND overlayHwnd = Core::CreateOverlayWindow(gameHwnd);
+    if (!overlayHwnd) {
+        Logger::Get().Log("OverlayCore", "ERROR: Failed to create overlay window.");
         return;
     }
-    log << "[Overlay] ImGui Win32 initialized." << std::endl;
-    HookWndProc(hWnd);
-    log << "[Overlay] WndProc hooked." << std::endl;
-    SetupSwapBuffersHook();
-    log << "[Overlay] SwapBuffers hook set up." << std::endl;
-    while (g_bRunning) {
-        log << "[Overlay] Frame start." << std::endl;
-        GameData::GetInstance()->Scan();
-        log << "[Overlay] GameData::Scan() called." << std::endl;
-        GameData::GetInstance()->SendToIPC();
-        log << "[Overlay] GameData::SendToIPC() called." << std::endl;
-        Sleep(16);
+    HDC hdc;
+    HGLRC hglrc;
+    if (!Core::InitializeOpenGL(overlayHwnd, hdc, hglrc)) {
+        Logger::Get().Log("OverlayCore", "ERROR: Failed to initialize OpenGL.");
+        DestroyWindow(overlayHwnd);
+        return;
     }
-    log << "[Overlay] MainLoop exiting." << std::endl;
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplWin32_Shutdown();
-    ImGui::DestroyContext();
-    if (f) fclose(f);
-    FreeConsole();
-    delete g_renderer;
-    MH_DisableHook(MH_ALL_HOOKS);
-    MH_Uninitialize();
+    if (!Core::InitializeImGui(overlayHwnd)) {
+        Logger::Get().Log("OverlayCore", "ERROR: Failed to initialize ImGui.");
+        Core::Cleanup(hdc, hglrc, overlayHwnd);
+        return;
+    }
+    NamedPipe pipe(IPC_PIPE_NAME);
+    if (!pipe.CreateServer()) {
+         Logger::Get().Log("OverlayCore", "ERROR: Failed to create IPC pipe.");
+         Core::Cleanup(hdc, hglrc, overlayHwnd);
+         return;
+    }
+    IpcPacket packet = {};
+    RECT lastRect = {}, rect;
+    while (Main::g_bRunning) {
+        MSG msg;
+        while (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE)) {
+            TranslateMessage(&msg);
+            DispatchMessageW(&msg);
+            if (msg.message == WM_QUIT) Main::g_bRunning = false;
+        }
+        if (!IsWindow(gameHwnd)) break;
+        GetWindowRect(gameHwnd, &rect);
+        if (memcmp(&rect, &lastRect, sizeof(RECT)) != 0) {
+            SetWindowPos(overlayHwnd, HWND_TOPMOST, rect.left, rect.top,
+                        rect.right - rect.left, rect.bottom - rect.top, SWP_NOACTIVATE);
+            lastRect = rect;
+        }
+        if (pipe.Read(&packet, sizeof(packet))) {
+            GameData::GetInstance()->UpdateFromIPC();
+        }
+        Core::RenderFrame(rect);
+        SwapBuffers(hdc);
+        Sleep(1);
+    }
+    pipe.Close();
+    Core::Cleanup(hdc, hglrc, overlayHwnd);
+    Logger::Get().Log("OverlayCore", "MainLoop finished.");
 }

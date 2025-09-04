@@ -1,26 +1,27 @@
 // src/Overlay/Memory/GameData.h
 #pragma once
+#include "../../IPC/SharedStructs.h"
 #include "../Utils/Singleton.h"
 #include <Windows.h>
 #include <vector>
 
 // --- Data Structures ---
 // CRITICAL: These structs MUST perfectly match the memory layout in AimTrainer's main.cpp
-struct Vec3 { float x, y, z; };
-
-struct RaylibCamera {
-    Vec3 position;
-    Vec3 target;
-    Vec3 up;
-    float fovy;
-    int projection;
-};
-
-struct RaylibTarget {
-    Vec3 position;
-    bool active;
-    float lifeTimer;
-};
+// struct Vec3 { float x, y, z; };
+//
+// struct RaylibCamera {
+//     Vec3 position;
+//     Vec3 target;
+//     Vec3 up;
+//     float fovy;
+//     int projection;
+// };
+//
+// struct RaylibTarget {
+//     Vec3 position;
+//     bool active;
+//     float lifeTimer;
+// };
 
 class GameData : public Singleton<GameData> {
 public:
@@ -37,7 +38,6 @@ private:
     bool m_bReady = false;
     uintptr_t m_pCamera = 0;
     uintptr_t m_pTargetsVec = 0;
-
     RaylibCamera m_Camera;
     std::vector<RaylibTarget> m_Targets;
 

@@ -1,4 +1,6 @@
 add_executable(Launcher Launcher.cpp)
+target_include_directories(Launcher PRIVATE ../Utils)
+target_link_libraries(Launcher PRIVATE Utils IPC)
 set_target_properties(Launcher PROPERTIES 
     RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/bin/Debug
     RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/bin/Release

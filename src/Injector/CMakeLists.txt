@@ -1,7 +1,17 @@
-# src/Injector/CMakeLists.txt
-add_executable(Injector main.cpp ../Overlay/IPC/SharedMemory.cpp ../Overlay/IPC/NamedPipe.cpp)
+cmake_minimum_required(VERSION 3.15)
+project(Injector)
 
-# Set output directories for Debug/Release
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+add_executable(Injector main.cpp)
+
+# Link with Utils for Logger and string conversion
+find_package(Threads REQUIRED)
+target_link_libraries(Injector PRIVATE Utils IPC Threads::Threads)
+target_include_directories(Injector PRIVATE ${CMAKE_SOURCE_DIR}/src/Overlay/IPC)
+
+# Output directories
 set_target_properties(Injector PROPERTIES 
     RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/bin/Debug
     RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/bin/Release
@@ -13,14 +23,3 @@ if(MSVC)
 else()
     target_compile_options(Injector PRIVATE -Wall -Wextra -pedantic $<$<CONFIG:Debug>:-Werror>)
 endif()
-
-# Link against necessary Windows libraries
-# Use PRIVATE for implementation dependencies
-target_link_libraries(Injector PRIVATE user32 kernel32)
-
-# Add post-build step to copy Injector.exe to bin/Debug or bin/Release
-add_custom_command(TARGET Injector POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        $<TARGET_FILE:Injector>
-        $<IF:$<CONFIG:Debug>,${CMAKE_SOURCE_DIR}/bin/Debug/Injector.exe,${CMAKE_SOURCE_DIR}/bin/Release/Injector.exe>
-)

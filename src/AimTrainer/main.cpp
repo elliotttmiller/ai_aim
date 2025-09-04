@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <iostream> // For debugging output
 #include <cstdint> // For int32_t
+#include "../Utils/Logger.h"
 
 // --- Constants ---
 const int SCREEN_WIDTH = 1280;
@@ -53,6 +54,9 @@ void DrawUI(GameState&, GameStats&, float&, std::vector<Target>&, float&);
 
 // --- Main Application Entry ---
 int main(void) {
+    Logger::Get().Init("bin/debug.log");
+    Logger::Get().Log("AimTrainer", "Initializing...");
+
     // --- Initialization ---
     SetConfigFlags(FLAG_VSYNC_HINT | FLAG_MSAA_4X_HINT);
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Raylib 3D FPS Aim Trainer");
@@ -74,9 +78,9 @@ int main(void) {
     // --- EXPOSE GLOBAL POINTERS ---
     g_pCamera = &camera;
     g_pTargets = &targets;
-    std::cout << "[AimTrainer] g_pCamera: 0x" << std::hex << (uintptr_t)g_pCamera << std::endl;
-    std::cout << "[AimTrainer] g_pTargets: 0x" << std::hex << (uintptr_t)g_pTargets << std::endl;
-    std::cout << "[AimTrainer] Anchor: " << g_AimTrainerAnchor << " @ 0x" << std::hex << (uintptr_t)g_AimTrainerAnchor << std::endl;
+    Logger::Get().Log("AimTrainer", std::string("g_pCamera: 0x") + std::to_string((uintptr_t)g_pCamera));
+    Logger::Get().Log("AimTrainer", std::string("g_pTargets: 0x") + std::to_string((uintptr_t)g_pTargets));
+    Logger::Get().Log("AimTrainer", std::string("Anchor: ") + g_AimTrainerAnchor + " @ 0x" + std::to_string((uintptr_t)g_AimTrainerAnchor));
     // ---
 
     ResetGame(currentState, stats, targets, gameTimer, spawnTimer);
@@ -170,7 +174,7 @@ void UpdateGame(GameState& currentState, GameStats& stats, std::vector<Target>& 
                 };
                 target.lifeTimer = TARGET_LIFETIME_SECONDS;
                 target.active = true;
-                std::cout << "[AimTrainer] Spawned target at (" << target.position.x << ", " << target.position.y << ", " << target.position.z << ")" << std::endl;
+                Logger::Get().Log("AimTrainer", std::string("Spawned target at (") + std::to_string(target.position.x) + ", " + std::to_string(target.position.y) + ", " + std::to_string(target.position.z) + ")");
                 break; // Spawn one at a time
             }
         }

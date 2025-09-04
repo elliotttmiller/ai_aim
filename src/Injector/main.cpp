@@ -1,12 +1,15 @@
 // src/Injector/main.cpp
 #include <iostream>
 #include <Windows.h>
-#include <TlHelp32.h>
 #include <string>
 #include <filesystem>
 #include <fstream>
 #include "../Overlay/IPC/SharedMemory.h"
-#include "../Overlay/IPC/NamedPipe.h"
+#include "../IPC/NamedPipe.h"
+#include "../Utils/Logger.h"
+#include "c:/Users/AMD/ai_aim/src/Utils/StringConvert.h"
+#include <tlhelp32.h>
+#include "../IPC/SharedStructs.h"
 
 // Finds the process ID for a given process name
 DWORD GetProcId(const wchar_t* procName) {
@@ -28,63 +31,123 @@ DWORD GetProcId(const wchar_t* procName) {
     return procId;
 }
 
-void LogDebug(const std::string& msg) {
-    std::ofstream log("bin/debug.log", std::ios::app);
-    log << msg << std::endl;
+// Autonomous game process detection
+std::wstring DetectGameProcess() {
+    HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (hSnap == INVALID_HANDLE_VALUE) return L"";
+    PROCESSENTRY32W procEntry;
+    procEntry.dwSize = sizeof(PROCESSENTRY32W);
+    if (Process32FirstW(hSnap, &procEntry)) {
+        do {
+            std::wstring exe(procEntry.szExeFile);
+            if (exe.find(L"Trainer") != std::wstring::npos || exe.find(L"Aim") != std::wstring::npos) {
+                CloseHandle(hSnap);
+                return exe;
+            }
+        } while (Process32NextW(hSnap, &procEntry));
+    }
+    CloseHandle(hSnap);
+    return L"";
 }
 
-// Modular, stealthy DLL injection
-int wmain(int argc, wchar_t* argv[]) {
-    const wchar_t* gameProcessName = argc > 1 ? argv[1] : L"AimTrainer.exe";
-    // Fix DLL name argument type
-    const char* dllName = "Overlay.dll";
-    char dllNameBuf[MAX_PATH] = {0};
-    if (argc > 2) {
-        WideCharToMultiByte(CP_UTF8, 0, argv[2], -1, dllNameBuf, MAX_PATH, NULL, NULL);
-        dllName = dllNameBuf;
+// Autonomous DLL/config detection
+std::filesystem::path FindFile(const std::string& pattern) {
+    for (auto& p : std::filesystem::recursive_directory_iterator(std::filesystem::current_path())) {
+        if (p.is_regular_file() && p.path().filename().string().find(pattern) != std::string::npos) {
+            return p.path();
+        }
     }
+    return {};
+}
 
-    // Get the full path to the DLL
-    char fullDllPath[MAX_PATH];
-    if (GetFullPathNameA(dllName, MAX_PATH, fullDllPath, nullptr) == 0) {
-        std::cerr << "Error: Could not get full path to DLL." << std::endl;
+int main(int /*argc*/, char** /*argv*/) {
+    Logger::Get().InitDefault();
+    Logger::Get().Log("Injector", "Initializing...");
+
+    // Autonomous detection
+    std::wstring gameProcessName = DetectGameProcess();
+    std::filesystem::path dllPath = FindFile("Overlay.dll");
+    std::filesystem::path configPath = FindFile("game_memory.cfg");
+
+    if (gameProcessName.empty() || dllPath.empty() || configPath.empty()) {
+        Logger::Get().Log("Injector", "Error: Could not auto-detect game process, DLL, or config.");
         return 1;
     }
 
-    if (!std::filesystem::exists(fullDllPath)) {
-        std::cerr << "Error: DLL file not found at " << fullDllPath << std::endl;
+    // Read config
+    std::ifstream cfg(configPath);
+    if (!cfg.is_open()) {
+        Logger::Get().Log("Injector", "Error: Could not open config file: " + WStringToString(configPath.wstring()));
         return 1;
     }
+    // Use double backslashes for Windows paths
+    if (gameProcessName.empty()) gameProcessName = L"AimTrainer.exe";
+    std::wstring dllName = dllPath.wstring();
 
-    // Safe logging for wide string
-    char procNameA[MAX_PATH];
-    WideCharToMultiByte(CP_UTF8, 0, gameProcessName, -1, procNameA, MAX_PATH, NULL, NULL);
-    LogDebug(std::string("Searching for process: ") + procNameA);
-    std::cout << "Searching for process: " << procNameA << std::endl;
-    DWORD procId = GetProcId(gameProcessName);
-
+    wchar_t fullDllPath[MAX_PATH];
+    if (!GetFullPathNameW(dllName.c_str(), MAX_PATH, fullDllPath, nullptr)) {
+        Logger::Get().Log("Injector", "Error: Could not get full path to DLL.");
+        return 1;
+    }
+    if (!std::filesystem::exists(std::wstring(fullDllPath))) {
+        Logger::Get().Log("Injector", "Error: DLL file not found at " + WStringToString(fullDllPath));
+        return 1;
+    }
+    Logger::Get().Log("Injector", "Searching for process: " + WStringToString(gameProcessName));
+    DWORD procId = GetProcId(gameProcessName.c_str());
     if (procId == 0) {
-        std::cerr << "Error: Target process not found. Is it running?" << std::endl;
-        LogDebug("Error: Target process not found. Is it running?");
+        Logger::Get().Log("Injector", "Error: Target process not found. Is it running?");
         return 1;
     }
-    LogDebug(std::string("Process found! PID: ") + std::to_string(procId));
-    LogDebug(std::string("Injecting DLL: ") + fullDllPath);
-    std::cout << "Process found! PID: " << procId << std::endl;
-    std::cout << "Injecting DLL: " << fullDllPath << std::endl;
-
-    // Launch game process if needed
-    // Setup IPC (shared memory/named pipe)
-    if (!IPC::SharedMemory::Create() && !IPC::NamedPipe::Create()) {
-        std::cerr << "[Injector] Failed to create IPC channel!" << std::endl;
+    Logger::Get().Log("Injector", "Process found! PID: " + std::to_string(procId));
+    Logger::Get().Log("Injector", "Injecting DLL: " + WStringToString(fullDllPath));
+    // Create IPC channel (NamedPipe)
+    NamedPipe pipe(IPC_PIPE_NAME);
+    bool ipcOk = pipe.CreateServer();
+    if (!IPC::SharedMemory::Create() && !ipcOk) {
+        Logger::Get().Log("Injector", "[Injector] Failed to create IPC channel!");
         return 1;
     }
+    Logger::Get().Log("Injector", "[Injector] IPC channel created. Ready for DLL and overlay.");
 
-    // Optionally launch DLL (minimal, only memory read + IPC)
-    // ...
-    std::cout << "[Injector] IPC channel created. Ready for DLL and overlay." << std::endl;
-
-    // Future: Add manual mapping, anti-cheat bypass, etc.
-
-    return 0;
+    // DLL Injection (Manual)
+    HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, procId);
+    if (!hProcess) {
+        Logger::Get().Log("Injector", "Error: Could not open target process.");
+        return 1;
+    }
+    size_t dllPathLen = (wcslen(fullDllPath) + 1) * sizeof(wchar_t);
+    LPVOID pRemoteDllPath = VirtualAllocEx(hProcess, nullptr, dllPathLen, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    if (!pRemoteDllPath) {
+        Logger::Get().Log("Injector", "Error: Could not allocate memory in target process.");
+        CloseHandle(hProcess);
+        return 1;
+    }
+    if (!WriteProcessMemory(hProcess, pRemoteDllPath, fullDllPath, dllPathLen, nullptr)) {
+        Logger::Get().Log("Injector", "Error: Could not write DLL path to target process.");
+        VirtualFreeEx(hProcess, pRemoteDllPath, 0, MEM_RELEASE);
+        CloseHandle(hProcess);
+        return 1;
+    }
+    HMODULE hKernel32 = GetModuleHandleW(L"kernel32.dll");
+    FARPROC pLoadLibraryW = GetProcAddress(hKernel32, "LoadLibraryW");
+    if (!pLoadLibraryW) {
+        Logger::Get().Log("Injector", "Error: Could not get address of LoadLibraryW.");
+        VirtualFreeEx(hProcess, pRemoteDllPath, 0, MEM_RELEASE);
+        CloseHandle(hProcess);
+        return 1;
+    }
+    HANDLE hThread = CreateRemoteThread(hProcess, nullptr, 0, (LPTHREAD_START_ROUTINE)pLoadLibraryW, pRemoteDllPath, 0, nullptr);
+    if (!hThread) {
+        Logger::Get().Log("Injector", "Error: Could not create remote thread in target process.");
+        VirtualFreeEx(hProcess, pRemoteDllPath, 0, MEM_RELEASE);
+        CloseHandle(hProcess);
+        return 1;
+    }
+    Logger::Get().Log("Injector", "DLL injected successfully.");
+    WaitForSingleObject(hThread, 5000);
+    VirtualFreeEx(hProcess, pRemoteDllPath, 0, MEM_RELEASE);
+    CloseHandle(hThread);
+    CloseHandle(hProcess);
+    Logger::Get().Log("Injector", "Injection routine complete. Overlay should be active.");
 }

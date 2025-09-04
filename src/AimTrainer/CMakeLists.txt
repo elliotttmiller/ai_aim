@@ -1,7 +1,7 @@
 # --- START OF FILE src/AimTrainer/CMakeLists.txt ---
 add_executable(AimTrainer main.cpp)
 target_include_directories(AimTrainer PRIVATE ../../libs/raylib/src)
-target_link_libraries(AimTrainer PRIVATE raylib)
+target_link_libraries(AimTrainer PRIVATE raylib Utils)
 set_target_properties(AimTrainer PROPERTIES 
     RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/bin/Debug
     RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/bin/Release

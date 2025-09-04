@@ -6,10 +6,10 @@ add_library(Overlay SHARED
     Input/InputManager.cpp
     Memory/GameData.cpp
     Memory/GameData.h
-    IPC/SharedMemory.cpp
-    IPC/SharedMemory.h
-    IPC/NamedPipe.cpp
-    IPC/NamedPipe.h
+    ../../IPC/SharedMemory.cpp
+    ../../IPC/SharedMemory.h
+    ../../IPC/NamedPipe.cpp
+    ../../IPC/NamedPipe.h
     Renderer/Renderer.cpp
     UI/Menu.cpp
 )
@@ -39,6 +39,7 @@ target_include_directories(Overlay PRIVATE
     ${CMAKE_SOURCE_DIR}/libs/minhook/include
     ${CMAKE_SOURCE_DIR}/libs/raylib/src
     ${CMAKE_CURRENT_SOURCE_DIR}/IPC
+    ${CMAKE_SOURCE_DIR}/src/Utils
 )
 
 # Link against necessary libraries
@@ -47,6 +48,7 @@ target_link_libraries(Overlay PRIVATE
     minhook
     dxgi
     opengl32
+    Utils
 )
 
 # Post-build: Copy Overlay.dll to bin/Debug for launcher/injector

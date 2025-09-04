@@ -1,16 +1,16 @@
 #pragma once
-#include <windows.h>
+#include <Windows.h>
 #include <string>
-namespace IPC {
-struct GameDataPacket;
+
 class NamedPipe {
 public:
-    static bool Create();
-    static bool Read(GameDataPacket& out);
-    static bool Write(const GameDataPacket& in);
-    static void Close();
+    NamedPipe(const std::wstring& name);
+    bool CreateServer();
+    bool ConnectClient();
+    bool Write(const void* data, size_t size);
+    bool Read(void* data, size_t size);
+    void Close();
 private:
-    static HANDLE hPipe;
-    static const std::wstring kName;
+    HANDLE m_pipe = INVALID_HANDLE_VALUE;
+    std::wstring m_name;
 };
-}
