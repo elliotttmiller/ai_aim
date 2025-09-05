@@ -8,10 +8,12 @@
 #ifdef _WIN32
     #include <Windows.h>
     #include <tlhelp32.h>
+    typedef HWND WindowHandle;
 #else
     // Cross-platform types for development
     typedef unsigned long DWORD;
     typedef void* HANDLE;
+    typedef void* WindowHandle;  // Generic window handle type
     #define INVALID_HANDLE_VALUE ((HANDLE)-1)
 #endif
 
@@ -92,9 +94,9 @@ struct GameInfo {
                  engineConfidence(0.0f), genreConfidence(0.0f), apiConfidence(0.0f) {}
 };
 
-class UniversalGameDetector {
+class UnifiedGameDetector {
 public:
-    static UniversalGameDetector& GetInstance();
+    static UnifiedGameDetector& GetInstance();
     
     // Main detection methods
     std::vector<GameInfo> DetectAllGames();
@@ -117,8 +119,8 @@ public:
     void EnableAPIDetection(bool enable) { m_enableAPIDetection = enable; }
     
 private:
-    UniversalGameDetector() = default;
-    ~UniversalGameDetector() = default;
+    UnifiedGameDetector() = default;
+    ~UnifiedGameDetector() = default;
     
     // Detection algorithms
     GameEngine DetectGameEngine(const GameInfo& info);
@@ -135,7 +137,7 @@ private:
     std::wstring GetProcessPath(DWORD processId);
     std::wstring GetWindowTitle(DWORD processId);
     bool Is64BitProcess(DWORD processId);
-    HWND FindMainWindow(DWORD processId);
+    WindowHandle FindMainWindow(DWORD processId);
     
     // Monitoring
     bool m_isMonitoring = false;

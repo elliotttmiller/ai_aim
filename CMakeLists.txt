@@ -29,24 +29,25 @@ function(join_paths joined_path first_path_segment)
     set(${joined_path} "${temp_path}" PARENT_SCOPE)
 endfunction()
 
-# For cross-platform development, temporarily disable raylib to focus on core components
-# set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-# set(BUILD_GAMES OFF CACHE BOOL "" FORCE) 
-# set(SUPPORT_FILEFORMAT_FLAC OFF CACHE BOOL "" FORCE)
-# set(PLATFORM_DESKTOP ON CACHE BOOL "" FORCE)
-# set(GLFW_BUILD_X11 OFF CACHE BOOL "" FORCE)
-# set(GLFW_BUILD_WAYLAND OFF CACHE BOOL "" FORCE)
+# For the user's AimTrainer game development, enable raylib
+set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(BUILD_GAMES OFF CACHE BOOL "" FORCE) 
+set(SUPPORT_FILEFORMAT_FLAC OFF CACHE BOOL "" FORCE)
+set(PLATFORM_DESKTOP ON CACHE BOOL "" FORCE)
+# Disable X11 and Wayland for CI environments
+set(GLFW_BUILD_X11 OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_WAYLAND OFF CACHE BOOL "" FORCE)
 
-# Build raylib (use main directory, not src) - TEMPORARILY DISABLED
-# add_subdirectory(libs/raylib)
+# Build raylib for AimTrainer
+add_subdirectory(libs/raylib)
 
 # Build minhook (Windows-specific - disable for cross-platform development)
-if(WIN32)
-    add_subdirectory(libs/minhook)
-endif()
+# if(WIN32)
+#     add_subdirectory(libs/minhook)
+# endif()
 
 # Build dear-imgui
-add_subdirectory(libs/dear-imgui)
+# add_subdirectory(libs/dear-imgui)
 
 # Build Utils and IPC modules if they have their own CMakeLists.txt
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/Utils/CMakeLists.txt")
@@ -76,7 +77,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/InjectedDLL/CMakeLists.txt")
     add_subdirectory(src/InjectedDLL)
 endif()
 
-# Build AimTrainer (disable for cross-platform development as it uses raylib)
-# if(EXISTS "${CMAKE_SOURCE_DIR}/src/AimTrainer/CMakeLists.txt")
-#     add_subdirectory(src/AimTrainer)
-# endif()
+# Build AimTrainer - the user's training game
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/AimTrainer/CMakeLists.txt")
+    add_subdirectory(src/AimTrainer)
+endif()

@@ -26,10 +26,12 @@
 
 #include "../Utils/Logger.h"
 #include "../Utils/GameDetection.h"
-#include "../Utils/UniversalConfig.h"
-#include "../Utils/StringConvert.h"
-#include "../Overlay/IPC/SharedMemory.h"
+#include "../Utils/UnifiedConfig.h"
+#include "../Utils/UnifiedUtilities.h"
+#include "../IPC/SharedMemory.h"
 #include "../IPC/SharedStructs.h"
+
+using namespace UnifiedUtilities;
 
 class UniversalInjector {
 public:
@@ -58,7 +60,7 @@ private:
     bool Is64BitProcess(DWORD processId);
     
     // State
-    UniversalConfig::InjectionMethod m_selectedMethod;
+    UnifiedConfig::InjectionMethod m_selectedMethod;
     std::wstring m_dllPath;
     GameInfo m_targetGame;
 };
@@ -119,8 +121,8 @@ int UniversalInjector::Run(int argc, char* argv[]) {
 }
 
 bool UniversalInjector::Initialize() {
-    // Initialize universal configuration
-    auto& config = UniversalConfig::GetInstance();
+    // Initialize unified configuration
+    auto& config = UnifiedConfig::GetInstance();
     if (!config.Initialize()) {
         Logger::Get().Log("Injector", "ERROR: Configuration initialization failed");
         return false;
@@ -195,12 +197,12 @@ GameInfo UniversalInjector::ResolveTarget(const std::string& targetHint) {
 }
 
 bool UniversalInjector::SelectInjectionMethod(const GameInfo& target) {
-    auto& config = UniversalConfig::GetInstance();
+    auto& config = UnifiedConfig::GetInstance();
     
     // Start with configured preference
-    auto preferredMethod = config.GetPreferredInjectionMethod();
+    auto preferredMethod = config.GetOptimalInjectionMethod();
     
-    if (preferredMethod == UniversalConfig::InjectionMethod::Automatic) {
+    if (preferredMethod == UnifiedConfig::InjectionMethod::DynamicSelection) {
         // Intelligent method selection based on target characteristics
         
         // Check if we have admin privileges for advanced methods
@@ -211,15 +213,15 @@ bool UniversalInjector::SelectInjectionMethod(const GameInfo& target) {
         
         if (hasAdmin && !hasAntiCheat) {
             // Use most reliable method
-            m_selectedMethod = UniversalConfig::InjectionMethod::ManualDLL;
+            m_selectedMethod = UnifiedConfig::InjectionMethod::ManualDLL;
             Logger::Get().Log("Injector", "Selected method: Manual DLL injection");
         } else if (!hasAntiCheat) {
             // Use less invasive method
-            m_selectedMethod = UniversalConfig::InjectionMethod::WindowsHook;
-            Logger::Get().Log("Injector", "Selected method: SetWindowsHook");
+            m_selectedMethod = UnifiedConfig::InjectionMethod::WindowsHook;
+            Logger::Get().Log("Injector", "Selected method: Windows Hook");
         } else {
             // Anti-cheat present, use stealthier approach
-            m_selectedMethod = UniversalConfig::InjectionMethod::ModuleHijack;
+            m_selectedMethod = UnifiedConfig::InjectionMethod::ModuleHijack;
             Logger::Get().Log("Injector", "Selected method: Module hijacking (stealth mode)");
         }
     } else {
@@ -234,7 +236,7 @@ bool UniversalInjector::PerformInjection(const GameInfo& target) {
     Logger::Get().Log("Injector", "Performing injection using selected method...");
     
     // Add randomized delay for anti-detection
-    auto& config = UniversalConfig::GetInstance();
+    auto& config = UnifiedConfig::GetInstance();
     if (config.GetValue<bool>("injection.randomize_timings", true)) {
         int baseDelay = config.GetValue<int>("injection.delay_ms", 1000);
         int randomDelay = baseDelay + (rand() % 2000); // Add 0-2 seconds random
@@ -242,13 +244,13 @@ bool UniversalInjector::PerformInjection(const GameInfo& target) {
     }
     
     switch (m_selectedMethod) {
-        case UniversalConfig::InjectionMethod::ManualDLL:
+        case UnifiedConfig::InjectionMethod::ManualDLL:
             return InjectViaDLLInjection(target.processId, m_dllPath);
             
-        case UniversalConfig::InjectionMethod::WindowsHook:
+        case UnifiedConfig::InjectionMethod::WindowsHook:
             return InjectViaSetWindowsHook(target.processId, m_dllPath);
             
-        case UniversalConfig::InjectionMethod::ProcessHollow:
+        case UnifiedConfig::InjectionMethod::ProcessHollow:
             return InjectViaProcessHollowing(target.processId, m_dllPath);
             
         default:
@@ -434,13 +436,13 @@ DWORD UniversalInjector::FindProcessByName(const std::wstring& processName) {
 bool UniversalInjector::SetupIPC() {
     Logger::Get().Log("Injector", "Setting up IPC communication...");
     
-    auto& config = UniversalConfig::GetInstance();
+    auto& config = UnifiedConfig::GetInstance();
     
     // Initialize shared memory for communication
     // The overlay DLL will connect to this when loaded
     try {
         std::wstring shmemName = config.GetSharedMemoryName();
-        size_t shmemSize = config.GetSharedMemorySize();
+        size_t shmemSize = config.GetOptimalSharedMemorySize();
         
         // Create shared memory (placeholder implementation)
         (void)shmemSize; // Suppress unused variable warning for now

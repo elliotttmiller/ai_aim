@@ -1,11 +1,13 @@
 #include "GameDetection.h"
 #include "Logger.h"
-#include "StringConvert.h"
+#include "UnifiedUtilities.h"
 #include <filesystem>
 #include <algorithm>
 #include <regex>
 #include <chrono>
 #include <thread>
+
+using namespace UnifiedUtilities;
 
 #ifdef _WIN32
     #include <psapi.h>
@@ -22,12 +24,12 @@
     inline void CloseHandle(HANDLE) {}
 #endif
 
-UniversalGameDetector& UniversalGameDetector::GetInstance() {
-    static UniversalGameDetector instance;
+UnifiedGameDetector& UnifiedGameDetector::GetInstance() {
+    static UnifiedGameDetector instance;
     return instance;
 }
 
-std::vector<GameInfo> UniversalGameDetector::DetectAllGames() {
+std::vector<GameInfo> UnifiedGameDetector::DetectAllGames() {
     Logger::Get().Log("GameDetector", "Starting universal game detection scan...");
     
     std::vector<GameInfo> detectedGames;
@@ -81,7 +83,7 @@ std::vector<GameInfo> UniversalGameDetector::DetectAllGames() {
     return detectedGames;
 }
 
-GameInfo UniversalGameDetector::DetectSpecificGame(DWORD processId) {
+GameInfo UnifiedGameDetector::DetectSpecificGame(DWORD processId) {
     GameInfo gameInfo;
     gameInfo.processId = processId;
     
@@ -133,7 +135,7 @@ GameInfo UniversalGameDetector::DetectSpecificGame(DWORD processId) {
     return gameInfo;
 }
 
-GameEngine UniversalGameDetector::DetectGameEngine(const GameInfo& info) {
+GameEngine UnifiedGameDetector::DetectGameEngine(const GameInfo& info) {
     const std::wstring& processName = info.processName;
     const std::wstring& path = info.executablePath;
     
@@ -165,7 +167,7 @@ GameEngine UniversalGameDetector::DetectGameEngine(const GameInfo& info) {
     return GameEngine::Unknown;
 }
 
-bool UniversalGameDetector::MatchesEnginePattern(const std::wstring& processName, const std::wstring& path, GameEngine engine) {
+bool UnifiedGameDetector::MatchesEnginePattern(const std::wstring& processName, const std::wstring& path, GameEngine engine) {
     // Convert to lowercase for case-insensitive matching
     std::wstring lowerName = processName;
     std::wstring lowerPath = path;
@@ -211,7 +213,7 @@ bool UniversalGameDetector::MatchesEnginePattern(const std::wstring& processName
     }
 }
 
-GameGenre UniversalGameDetector::DetectGameGenre(const GameInfo& info) {
+GameGenre UnifiedGameDetector::DetectGameGenre(const GameInfo& info) {
     // Analyze process name and window title for genre indicators
     std::wstring combined = info.processName + L" " + info.windowTitle;
     std::transform(combined.begin(), combined.end(), combined.begin(), ::towlower);
@@ -256,7 +258,7 @@ GameGenre UniversalGameDetector::DetectGameGenre(const GameInfo& info) {
     return GameGenre::Unknown;
 }
 
-std::vector<GraphicsAPI> UniversalGameDetector::DetectGraphicsAPIs(DWORD processId) {
+std::vector<GraphicsAPI> UnifiedGameDetector::DetectGraphicsAPIs(DWORD processId) {
     (void)processId; // Suppress unused parameter warning for cross-platform build
     std::vector<GraphicsAPI> apis;
     
@@ -306,7 +308,7 @@ std::vector<GraphicsAPI> UniversalGameDetector::DetectGraphicsAPIs(DWORD process
     return apis;
 }
 
-AntiCheatSystem UniversalGameDetector::DetectAntiCheat(const GameInfo& info) {
+AntiCheatSystem UnifiedGameDetector::DetectAntiCheat(const GameInfo& info) {
     // Check for common anti-cheat systems in process name or path
     std::wstring lowerPath = info.executablePath;
     std::transform(lowerPath.begin(), lowerPath.end(), lowerPath.begin(), ::towlower);
@@ -328,7 +330,7 @@ AntiCheatSystem UniversalGameDetector::DetectAntiCheat(const GameInfo& info) {
     return AntiCheatSystem::None;
 }
 
-bool UniversalGameDetector::IsGameProcess(DWORD processId) {
+bool UnifiedGameDetector::IsGameProcess(DWORD processId) {
     // Heuristics to determine if a process is likely a game
     
     // 1. Must be a 64-bit process, as our DLL is 64-bit. This is the most important check.
@@ -367,15 +369,17 @@ bool UniversalGameDetector::IsGameProcess(DWORD processId) {
     }
     
     // 4. Check for a visible window as an indicator of a foreground application (like a game)
-    HWND hWnd = FindMainWindow(processId);
-    if (IsWindowVisible(hWnd)) {
+#ifdef _WIN32
+    WindowHandle hWnd = FindMainWindow(processId);
+    if (hWnd && IsWindowVisible((HWND)hWnd)) {
         return true;
     }
+#endif
 
     return false;
 }
 
-std::wstring UniversalGameDetector::GetProcessPath(DWORD processId) {
+std::wstring UnifiedGameDetector::GetProcessPath(DWORD processId) {
     (void)processId; // Suppress unused parameter warning for cross-platform build
 #ifdef _WIN32
     HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processId);
@@ -391,14 +395,14 @@ std::wstring UniversalGameDetector::GetProcessPath(DWORD processId) {
     return L"";
 }
 
-std::wstring UniversalGameDetector::GetWindowTitle(DWORD processId) {
+std::wstring UnifiedGameDetector::GetWindowTitle(DWORD processId) {
     (void)processId; // Suppress unused parameter warning for cross-platform build
     // This would enumerate windows and find the main window for the process
     // Simplified implementation for now
     return L"";
 }
 
-bool UniversalGameDetector::Is64BitProcess(DWORD processId) {
+bool UnifiedGameDetector::Is64BitProcess(DWORD processId) {
     (void)processId; // Suppress unused parameter warning for cross-platform build
 #ifdef _WIN32
     HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, processId);
@@ -419,6 +423,7 @@ bool UniversalGameDetector::Is64BitProcess(DWORD processId) {
     return false; // Default to false if we can't determine
 }
 
+#ifdef _WIN32
 struct EnumData {
     DWORD processId;
     HWND mainWindow;
@@ -434,16 +439,22 @@ BOOL CALLBACK EnumWindowsCallback(HWND handle, LPARAM lParam) {
     }
     return TRUE; // Continue enumerating
 }
+#endif
 
-HWND UniversalGameDetector::FindMainWindow(DWORD processId) {
+WindowHandle UnifiedGameDetector::FindMainWindow(DWORD processId) {
+#ifdef _WIN32
     EnumData data;
     data.processId = processId;
     data.mainWindow = NULL;
     EnumWindows(EnumWindowsCallback, (LPARAM)&data);
     return data.mainWindow;
+#else
+    (void)processId; // Suppress unused parameter warning
+    return nullptr; // Cross-platform stub
+#endif
 }
 
-GameInfo UniversalGameDetector::GetBestInjectionTarget() {
+GameInfo UnifiedGameDetector::GetBestInjectionTarget() {
     auto games = DetectAllGames();
     
     // Score games based on suitability for injection

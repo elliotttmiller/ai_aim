@@ -23,11 +23,12 @@
 #include <chrono>
 
 #include "../Utils/Logger.h"
-#include "../Utils/StringConvert.h"
+#include "../Utils/UnifiedUtilities.h"
 #include "../Utils/GameDetection.h"
-#include "../Utils/UniversalConfig.h"
-#include "../Utils/StringConvert.h"
+#include "../Utils/UnifiedConfig.h"
 #include "../IPC/SharedStructs.h"
+
+using namespace UnifiedUtilities;
 
 class UniversalLauncher {
 public:
@@ -107,7 +108,7 @@ bool UniversalLauncher::Initialize() {
     m_startTime = std::chrono::steady_clock::now();
     
     // Initialize universal configuration system
-    auto& config = UniversalConfig::GetInstance();
+    auto& config = UnifiedConfig::GetInstance();
     if (!config.Initialize()) {
         Logger::Get().Log("Launcher", "ERROR: Failed to initialize configuration system");
         return false;
@@ -145,23 +146,17 @@ bool UniversalLauncher::Initialize() {
 }
 
 void UniversalLauncher::DisplaySystemInfo() {
-    auto& config = UniversalConfig::GetInstance();
+    auto& config = UnifiedConfig::GetInstance();
     
     Logger::Get().Log("Launcher", "=== System Information ===");
     Logger::Get().Log("Launcher", "Architecture: " + config.GetValue<std::string>("system.architecture", "unknown"));
     Logger::Get().Log("Launcher", "Admin Privileges: " + 
                      std::string(config.GetValue<bool>("system.has_admin_privileges", false) ? "Yes" : "No"));
     
-    auto supportedAPIs = config.GetSupportedGraphicsAPIs();
-    std::string apiList;
-    for (const auto& api : supportedAPIs) {
-        if (!apiList.empty()) apiList += ", ";
-        apiList += WStringToString(api);
-    }
-    Logger::Get().Log("Launcher", "Supported Graphics APIs: " + apiList);
+    Logger::Get().Log("Launcher", "Graphics APIs: Detection not implemented");
     
     Logger::Get().Log("Launcher", "Injection Method: " + 
-                     std::to_string(static_cast<int>(config.GetPreferredInjectionMethod())));
+                     std::to_string(static_cast<int>(config.GetOptimalInjectionMethod())));
     Logger::Get().Log("Launcher", "=========================");
 }
 
@@ -194,7 +189,7 @@ GameInfo UniversalLauncher::SelectBestTarget() {
 }
 
 bool UniversalLauncher::LaunchInjection(const GameInfo& target) {
-    auto& config = UniversalConfig::GetInstance();
+    auto& config = UnifiedConfig::GetInstance();
     
     std::wstring injectorPath = config.GetInjectorPath();
     std::wstring targetProcess = target.processName;

@@ -22,8 +22,11 @@ const int MAX_ACTIVE_TARGETS = 10;
 // IMPORTANT: This struct's memory layout must be identical in the overlay's GameData.h
 struct Target {
     Vector3 position;
+    Vector3 velocity;        // Add velocity for prediction
     bool active;
     float lifeTimer;
+    Vector3 lastPosition;    // Track last position for velocity calculation
+    float lastUpdateTime;    // Track when velocity was last calculated
 };
 
 enum class GameState { MAIN_MENU, PLAYING, RESULTS };
@@ -111,6 +114,9 @@ void ResetGame(GameState& currentState, GameStats& stats, std::vector<Target>& t
     stats = {0, 0, 0, 0};
     for (auto& target : targets) {
         target.active = false;
+        target.velocity = {0.0f, 0.0f, 0.0f};
+        target.lastPosition = {0.0f, 0.0f, 0.0f};
+        target.lastUpdateTime = 0.0f;
     }
     gameTimer = GAME_DURATION_SECONDS;
     spawnTimer = SPAWN_INTERVAL_SECONDS;
@@ -153,6 +159,22 @@ void UpdateGame(GameState& currentState, GameStats& stats, std::vector<Target>& 
     // Update active targets
     for (auto& target : targets) {
         if (target.active) {
+            // Store last position for velocity calculation
+            Vector3 oldPosition = target.position;
+            
+            // Add simple movement to make targets more interesting
+            // Slow random drift to create velocity data for prediction
+            float timeAlive = TARGET_LIFETIME_SECONDS - target.lifeTimer;
+            target.position.x += sin(timeAlive * 0.5f) * deltaTime * 0.3f;
+            target.position.y += cos(timeAlive * 0.7f) * deltaTime * 0.2f;
+            
+            // Calculate velocity (change in position over time)
+            if (deltaTime > 0.001f) { // Avoid division by zero
+                target.velocity.x = (target.position.x - oldPosition.x) / deltaTime;
+                target.velocity.y = (target.position.y - oldPosition.y) / deltaTime;
+                target.velocity.z = (target.position.z - oldPosition.z) / deltaTime;
+            }
+            
             target.lifeTimer -= deltaTime;
             if (target.lifeTimer <= 0.0f) {
                 target.active = false;
@@ -171,6 +193,9 @@ void UpdateGame(GameState& currentState, GameStats& stats, std::vector<Target>& 
                     (float)GetRandomValue(-3, 3), // Y: centered around camera target
                     (float)GetRandomValue(1, 8)   // Z: always in front of camera
                 };
+                target.lastPosition = target.position; // Initialize last position
+                target.velocity = {0.0f, 0.0f, 0.0f}; // Start with zero velocity
+                target.lastUpdateTime = gameTimer; // Track when this was created
                 target.lifeTimer = TARGET_LIFETIME_SECONDS;
                 target.active = true;
                 Logger::Get().Log("AimTrainer", std::string("Spawned target at (") + std::to_string(target.position.x) + ", " + std::to_string(target.position.y) + ", " + std::to_string(target.position.z) + ")");
